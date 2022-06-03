@@ -1,0 +1,22 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{2E76F634-45B2-C2AF-351B-B392A6947DF3}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "WiTracingSim",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		}
+	]
+}
