@@ -228,5 +228,11 @@ protected:
 
 	mutable TOptional< AxisUtil::FAxisMarkerData > XAxisMarkers;
 	mutable TOptional< AxisUtil::FAxisMarkerData > YAxisMarkers;
+
+public:
+	virtual FString GetReferencerName() const override
+	{
+		return "SKantanCartesianChart";
+	}
 };
 

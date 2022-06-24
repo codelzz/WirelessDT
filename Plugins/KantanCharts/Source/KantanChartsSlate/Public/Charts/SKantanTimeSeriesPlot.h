@@ -107,6 +107,13 @@ protected:
 	bool bExtendValueRangeToZero = true;
 	TOptional< float > FixedTimeRange;
 	//bool bRoundTimeRange;
+
+// Fix for UE5: FGObject override 
+public:
+	virtual FString GetReferencerName() const override
+	{
+		return "SKantanTimeSeriesPlot";
+	}
 };
 
 

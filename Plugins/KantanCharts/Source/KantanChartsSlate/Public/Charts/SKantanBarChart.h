@@ -175,5 +175,11 @@ private:
 
 	TSharedPtr< FSlateBrush > BarInteriorBrush;
 	TSharedPtr< FSlateBrush > BarBorderBrush;
+
+public:
+	virtual FString GetReferencerName() const override
+	{
+		return "SKantanBarChart";
+	}
 };
 

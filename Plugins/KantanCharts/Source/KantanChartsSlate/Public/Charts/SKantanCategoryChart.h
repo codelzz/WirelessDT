@@ -91,5 +91,11 @@ protected:
 	// Whenever we poll the Datasource, this gets updated to include mappings for any
 	// categories not already present.
 	TMap< FName, FName > CategoryStyleMapping;
+
+public:
+	virtual FString GetReferencerName() const override
+	{
+		return "SKantanCategoryChart";
+	}
 };
 

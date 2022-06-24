@@ -167,4 +167,12 @@ protected:
 	float UpdateTickRate;
 
 	KantanCharts::FOnInteractionMouseDown OnChartMouseDown;
+
+
+// Fix for UE5: FGObject override 
+public:
+	virtual FString GetReferencerName() const override
+	{
+		return "SKantanChart";
+	}
 };
