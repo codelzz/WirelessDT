@@ -52,7 +52,7 @@ void AWiTracingAgent::IterativeWiTracing(TArray<int64>& RSSIPdf, bool bVisualize
 		TXIndex++;
 
 		// remove background noise if required
-		if (bRemoveBackgroundNoise)
+		if (bEnableBackgroundDenoising)
 		{
 			RemoveBackgroundNoise(RSSIPdf);
 		}
@@ -61,15 +61,19 @@ void AWiTracingAgent::IterativeWiTracing(TArray<int64>& RSSIPdf, bool bVisualize
 
 void AWiTracingAgent::RemoveBackgroundNoise(TArray<int64>& RSSIPdf)
 {
-	int32 MaxRSSIIndex = 0;
+	int32 MaxRSSIIndex = -1;
 	int32 Index = 0;
 	for (auto& RSSI : RSSIPdf)
 	{
 		if (RSSI != 0)
 		{
-			MaxRSSIIndex = Index;
-
-			if (Index > MaxRSSIIndex + BackgroundNoiseThreshold)
+			// we only set max index when found it at the first time
+			if (MaxRSSIIndex < 0)
+			{
+				MaxRSSIIndex = Index;
+			}
+			
+			if (Index > MaxRSSIIndex + BackgroundNoiseSNR)
 			{
 				// set all RSSI value out of valid boundary to 0
 				RSSI = 0;

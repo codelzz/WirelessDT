@@ -33,9 +33,9 @@ public:
 	UPROPERTY(EditAnywhere, Category="Wi Tracing")
 	UTextureRenderTarget2D* TextureRenderTargetTemp;	// Texture for temporal used
 	UPROPERTY(EditAnywhere, Category = "Wi Tracing")
-	bool bRemoveBackgroundNoise = false;
+	bool bEnableBackgroundDenoising = false;
 	UPROPERTY(EditAnywhere, Category = "Wi Tracing")
-	int32 BackgroundNoiseThreshold = 20;
+	int32 BackgroundNoiseSNR = 20;
 
 	/* [ISSUE] Performance Issue
 	 * As we need to isolate the impact from different TX in the scene, at each iteration we only do WiTracing
@@ -52,11 +52,15 @@ public:
 	 * Get the TX will be traced in next iterative witracing 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	AWirelessTransmitter* GetTX() const;
+		AWirelessTransmitter* GetTX() const;
 
-
-//	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-//		void TestDelegate();
+	// for background denoising
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing|Denoising")
+		bool GetBackgroundDenoising() { return bEnableBackgroundDenoising; }
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing|Denoising")
+		void SetBackgroundDenoising(bool EnableDenoising) { bEnableBackgroundDenoising = EnableDenoising;  }
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing|Denoising")
+		void SwitchBackgroundDenoising() { bEnableBackgroundDenoising = !bEnableBackgroundDenoising; }
 
 private:
 	APlayerController* PlayerController;
