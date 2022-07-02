@@ -20,7 +20,7 @@ public:
 
 public:
 	FString GetName() const { return TEXT("UdpSocketServer");}
-	bool Listen();
+	void Listen();
 	void Close();
 
 public:

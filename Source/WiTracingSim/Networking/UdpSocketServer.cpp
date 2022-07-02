@@ -64,14 +64,15 @@ TSharedPtr<TArray<uint8>, ESPMode::ThreadSafe> FUdpSocketServer::StringToByteArr
 	return Bytes;
 }
 
-bool FUdpSocketServer::Listen()
+void FUdpSocketServer::Listen()
 {
 	Socket = FUdpSocketBuilder(GetName()).AsReusable();
 	TSharedPtr<FInternetAddr, ESPMode::ThreadSafe> InternetAddr = SocketSubSystem->CreateInternetAddr();
 	InternetAddr->SetIp(ServerEndpoint.Address.Value);
 	InternetAddr->SetPort(ServerEndpoint.Port);
 	Socket->Bind(*InternetAddr);
-	if (Socket->Listen(1))
+	// [ISSUE] what does it mean when listen return false, and why the connection still work even listen false?
+	Socket->Listen(1);
 	{
 		Sender = MakeShared<FUdpSocketSender, ESPMode::ThreadSafe>(Socket, TEXT("UdpSocketSender"));
 		Receiver = MakeShared<FUdpSocketReceiver, ESPMode::ThreadSafe>(Socket, FTimespan::FromMilliseconds(1.0f), TEXT("UdpSocketReceiver"));
@@ -80,9 +81,8 @@ bool FUdpSocketServer::Listen()
 			Receiver->OnDataReceived().BindRaw(this, &FUdpSocketServer::OnDataReceived);
 			Receiver->Start();
 		}
-		return true;
 	}
-	return false;
+
 }
 
 void FUdpSocketServer::Close()
@@ -94,18 +94,14 @@ void FUdpSocketServer::OnDataReceived(const FArrayReaderPtr& ReaderPtr, const FI
 {
 	// if data is send from client endpoint then do thing
 	// if (Endpoint == ClientEndpoint)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] OnDataReceived -> %s"), *GetName(), *ArrayReaderPtrToString(ReaderPtr));
-	}
+	UE_LOG(LogTemp, Warning, TEXT("[%s] OnDataReceived -> %s"), *GetName(), *ArrayReaderPtrToString(ReaderPtr));
 }
 
 bool FUdpSocketServer::Send(const TSharedRef<TArray<uint8>, ESPMode::ThreadSafe>& Data)
 {
-	if (!Sender.IsValid()) { 
-		return false;
+	if (Sender.IsValid()) { 
+		Sender->Send(Data, ClientEndpoint);
+		return true;
 	}
-
-	// send data to client endpoint
-	Sender->Send(Data, ClientEndpoint);
-	return true;
+	return false;
 }
