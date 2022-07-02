@@ -2,25 +2,19 @@ import socket
 import time
 
 import settings
-from networking.udp import UdpReceiver, UdpSender
+from networking.udp import UdpSocketReceiver, UdpSocketSender
 
 
-class UdpClient:
-    endpoint = None
-    on_data_sent = None
-    on_data_recv = None
-    receiver = None
-    sender = None
-    socket = None
+class UdpSocketClient:
 
-    def __init__(self, endpoint, on_data_sent, on_data_recv):
+    def __init__(self, endpoint, on_data_sent, on_data_recv, wait_time=0.001):
         self.endpoint = endpoint
-        self.on_data_recv = on_data_recv
         self.on_data_sent = on_data_sent
+        self.on_data_recv = on_data_recv
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.socket.bind(self.endpoint)
-        self.receiver = UdpReceiver(self.socket, self.on_data_recv, wait_time=0.001)
-        self.sender = UdpSender(self.socket, self.on_data_sent, wait_time=0.001)
+        self.receiver = UdpSocketReceiver(self.socket, self.on_data_recv, wait_time=wait_time)
+        self.sender = UdpSocketSender(self.socket, self.on_data_sent, wait_time=wait_time)
 
     def start(self):
         if self.sender is not None:
@@ -34,7 +28,8 @@ class UdpClient:
 
 
 if __name__ == "__main__":
-    server_address = settings.NETWORK_CONFIG['server_endpoint']
+    SERVER_ENDPOINT = settings.NETWORK_CONFIG['server_endpoint']
+    CLIENT_ENDPOINT = settings.NETWORK_CONFIG['client_endpoint']
 
     def on_data_sent(byte_data, address):
         print(f"{address} << {repr(byte_data)}")
@@ -42,13 +37,13 @@ if __name__ == "__main__":
     def on_data_recv(byte_data, address):
         print(f"{address} >> {repr(byte_data)}")
 
-    client = UdpClient(server_address, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
+    client = UdpSocketClient(CLIENT_ENDPOINT, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
     client.start()
 
     while True:
         data = f'{time.time()}'
         byte_data = str.encode(data)
-        client.sendto(byte_data=byte_data, address=server_address)
+        client.sendto(byte_data=byte_data, address=SERVER_ENDPOINT)
         time.sleep(1)
 
 

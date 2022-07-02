@@ -1,12 +1,11 @@
 import socket
 import time
 
-import settings
 from networking import udp
-from networking.udp import UdpRunnable
+from networking.udp import UdpSocketRunnable
 
 
-class UdpServer(UdpRunnable):
+class UdpSocketServer(UdpSocketRunnable):
     endpoint = None
 
     def __init__(self, endpoint, wait_time=0.01):
@@ -27,9 +26,9 @@ class UdpServer(UdpRunnable):
         return f"<{self.__class__.__name__} IP={self.endpoint[0]} Port={self.endpoint[1]}>"
 
 
-if __name__ == "__main__":
-    server = UdpServer(settings.NETWORK_CONFIG['server_address'])
-    server.start()
+# if __name__ == "__main__":
+#     server = UdpScoketServer(settings.NETWORK_CONFIG['server_endpoint'])
+#     server.start()
 
-    while True:
-        time.sleep(60)
+#     while True:
+#         time.sleep(60)

@@ -1,10 +1,9 @@
 import socket
 import time
 
-from networking.udp_client import UdpClient
-
-from networking.udp_client_unreal import UdpClientUnreal
 import settings
+from networking.udp_socket_client import UdpSocketClient
+from networking.unreal_udp_socket_client import UnrealUdpSocketClient
 
 
 if __name__ == "__main__":
@@ -17,14 +16,15 @@ if __name__ == "__main__":
     def on_data_recv(byte_data, address):
         print(f"{address} >> {repr(byte_data)}")
 
-    client = UdpClientUnreal(server_endpoint=SERVER_ENDPOINT,
-                             client_endpoint=CLIENT_ENDPOINT,
-                             on_data_sent=on_data_sent,
-                             on_data_recv=on_data_recv)
+    client = UdpSocketClient(CLIENT_ENDPOINT, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
     client.start()
 
     while True:
-        data = f'{time.time()}'
-        byte_data = str.encode(data)
-        client.send(byte_data=byte_data)
-        time.sleep(1)
+        # [ISSUE] why increasing decimal places can help to eliminate the 
+        # error buffer at unreal server side?
+        data = f'{time.time():.10f}'
+        byte_data = data.encode("utf-8")
+        client.sendto(byte_data=byte_data, address=SERVER_ENDPOINT)
+        time.sleep(0.1)
+
+

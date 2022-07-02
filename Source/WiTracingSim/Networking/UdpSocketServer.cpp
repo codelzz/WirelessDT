@@ -36,21 +36,21 @@ FIPv4Endpoint FUdpSocketServer::StringToEndpoint(const FString& InIP, uint16 InP
 
 FString FUdpSocketServer::ArrayReaderPtrToString(const FArrayReaderPtr& Reader)
 {
-	return FString(ANSI_TO_TCHAR(reinterpret_cast<const char*>(Reader->GetData())));
+	return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(Reader->GetData())));
 }
 
 FString FUdpSocketServer::BytesSharedPtrToString(const TSharedPtr<TArray<uint8>, ESPMode::ThreadSafe>& BytesPtr)
 {
 	if (BytesPtr.IsValid())
 	{
-		return FString(ANSI_TO_TCHAR(reinterpret_cast<const char*>(BytesPtr->GetData())));
+		return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(BytesPtr->GetData())));
 	}
 	return TEXT("");
 }
 
 FString FUdpSocketServer::BytesToString(const TArray<uint8>& Bytes)
 {
-	return FString(ANSI_TO_TCHAR(reinterpret_cast<const char*>(Bytes.GetData())));
+	return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(Bytes.GetData())));
 }
 
 TSharedPtr<TArray<uint8>, ESPMode::ThreadSafe> FUdpSocketServer::StringToByteArray(const FString& String)
@@ -59,7 +59,7 @@ TSharedPtr<TArray<uint8>, ESPMode::ThreadSafe> FUdpSocketServer::StringToByteArr
 	if (Bytes.IsValid())
 	{
 		Bytes->SetNum(String.Len());
-		memcpy(Bytes->GetData(), TCHAR_TO_ANSI(*String), String.Len());
+		memcpy(Bytes->GetData(), TCHAR_TO_UTF8(*String), String.Len());
 	}
 	return Bytes;
 }

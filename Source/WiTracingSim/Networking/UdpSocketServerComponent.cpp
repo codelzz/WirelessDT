@@ -36,6 +36,7 @@ void UUdpSocketServerComponent::Listen()
 	UdpSocketServer = MakeShared<FUdpSocketServer>(
 		FUdpSocketServer::StringToEndpoint(ServerIP, ServerPort), 
 		FUdpSocketServer::StringToEndpoint(ClientIP, ClientPort));
+
 	if (IsValid())
 	{
 		UdpSocketServer->Listen();
