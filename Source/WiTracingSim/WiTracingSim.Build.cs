@@ -16,6 +16,8 @@ public class WiTracingSim : ModuleRules
 			// Network Modules
 			"Sockets",
 			"Networking",
+			// Wi Tracing
+			"Renderer",
 		});
 	}
 }
