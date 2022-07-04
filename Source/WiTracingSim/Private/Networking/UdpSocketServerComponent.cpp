@@ -1,4 +1,4 @@
-#include "UdpSocketServerComponent.h"
+#include "Networking/UdpSocketServerComponent.h"
 
 UUdpSocketServerComponent::UUdpSocketServerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

@@ -1,6 +1,7 @@
-#include "WiTracingAgent.h"
+#include "Agent/WiTracingAgent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "JsonObjectConverter.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
 
 AWiTracingAgent::AWiTracingAgent()
@@ -9,6 +10,12 @@ AWiTracingAgent::AWiTracingAgent()
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
+
+	UdpSocketServerComponent = CreateDefaultSubobject<UUdpSocketServerComponent>(TEXT("UdpSocketServerComponent0"));
+	UdpSocketServerComponent = CastChecked<UUdpSocketServerComponent>(GetUdpSocketServerComponent());
+
+	UdpSocketServerComponent->SetupAttachment(Root);
+	
 }
 
 void AWiTracingAgent::BeginPlay()
@@ -38,24 +45,39 @@ void AWiTracingAgent::IterativeWiTracing(TArray<int64>& RSSIPdf, bool bVisualize
 		TXIndex = TXIndex % (TXNum + 1);
 		if (PlayerController)
 		{
+			AWirelessTransmitter* TX = nullptr;
 			FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
 			if (TXIndex < TXNum)
 			{
-				UWiTracingRendererBlueprintLibrary::RenderWiTracingByTransmitter(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, TXs[TXIndex], RSSIPdf);
+				TX = TXs[TXIndex];
+				UWiTracingRendererBlueprintLibrary::RenderWiTracingByTransmitter(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, TX, RSSIPdf);
 			}
 			else
 			{
-			
 				UWiTracingRendererBlueprintLibrary::RenderWiTracing(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, RSSIPdf);
+			}
+
+			// remove background noise if required
+			if (bEnableBackgroundDenoising)
+			{
+				RemoveBackgroundNoise(RSSIPdf);
+			}
+
+			if (UdpSocketServerComponent)
+			{
+				FWiTracingResult StructData(
+					TX ? TX->GetName() : FString("Total"),
+					Transform.GetLocation(), 
+					RSSIPdf, 
+					FDateTime::UtcNow().ToUnixTimestamp() * 1000 + FDateTime::UtcNow().GetMillisecond());
+				FString JsonData;
+				if (FJsonObjectConverter::UStructToJsonObjectString(StructData, JsonData, 0, 0))
+				{
+					UdpSocketServerComponent->Send(JsonData);
+				}
 			}
 		}
 		TXIndex++;
-
-		// remove background noise if required
-		if (bEnableBackgroundDenoising)
-		{
-			RemoveBackgroundNoise(RSSIPdf);
-		}
 	}
 }
 

@@ -13,5 +13,7 @@ APP_CONFIG = {
 }
 
 UNREAL_CONFIG = {
-    'num_of_beacons': 22
+    # 'num_of_beacons': 22
+    'rssi_max': 0,
+    'rssi_min': -99,
 }

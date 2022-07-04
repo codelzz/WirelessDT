@@ -18,6 +18,9 @@ public class WiTracingSim : ModuleRules
 			"Networking",
 			// Wi Tracing
 			"Renderer",
+			// Json
+			"Json",
+			"JsonUtilities",
 		});
 	}
 }
