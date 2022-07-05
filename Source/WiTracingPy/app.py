@@ -20,7 +20,6 @@ if __name__ == "__main__":
         data = json.loads(byte_data.decode('utf-8'))
         preprocessor.enqueue(data)
 
-
     client = UdpSocketClient(CLIENT_ENDPOINT, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
     client.start()
 
