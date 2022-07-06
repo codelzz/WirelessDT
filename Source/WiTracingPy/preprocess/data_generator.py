@@ -83,18 +83,17 @@ class DatasetGenerator(WindowSplitter):
         self.partition = partition
 
         data = data.to_numpy().astype(dtype)
-        seq_len = data.shape[0]
 
-        # as a time serise data using partition depend on time might affect the performance on test
-        # and validation set
-        self.train_width, self.val_width, self.test_width = [int(seq_len * p) for p in self.partition]
-        train = data[:self.train_width]
-        valid = data[self.train_width:self.train_width + self.val_width]
-        test = data[self.train_width + self.val_width:]
-
-        self.train_ds = self.build_dataset(train)
-        self.valid_ds = self.build_dataset(valid)
-        self.test_ds = self.build_dataset(test)
+        self.full_ds = self.build_dataset(data)
+        size = self.full_dataset_size();
+   
+        train_size = int(partition[0] * size)
+        test_size  = int(partition[2] * size)
+        
+        self.train_ds = self.full_ds.take(train_size)
+        self.test_ds = self.full_ds.skip(train_size)
+        self.valid_ds = self.test_ds.skip(test_size)
+        self.test_ds = self.test_ds.take(test_size)
 
     def build_dataset(self, data):
         """ Construct Dataset, split input data to training set/ validation set and test set
@@ -110,10 +109,18 @@ class DatasetGenerator(WindowSplitter):
         # 1.
         dataset = timeseries_dataset_from_array(data=data, targets=None, sequence_length=self.total_window_size,
                                                 sequence_stride=1, shuffle=True, batch_size=1)
+        # check the size of dataset
+        # print("dataset size before batch", dataset.cardinality().numpy())
         # 2.
         dataset = dataset.map(self)
         # 3.
         return dataset.unbatch().batch(self.batch_size)
+    
+    def full_dataset_size(self):
+        count = 0
+        for item in self.full_ds:
+            count += 1
+        return count
 
     def __repr__(self):
         return '\n'.join([
