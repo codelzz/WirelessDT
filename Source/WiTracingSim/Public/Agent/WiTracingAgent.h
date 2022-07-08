@@ -95,7 +95,7 @@ public:
 	 * Get the TX will be traced in next iterative witracing 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-		AWirelessTransmitter* GetTX() const;
+		AWirelessTransmitter* GetTX(); 
 
 	/*
 	 * Background Denoising (BackgroundNoiseSNR Interface)

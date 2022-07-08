@@ -105,7 +105,7 @@ void AWiTracingAgent::RemoveBackgroundNoise(TArray<int64>& RSSIPdf)
 	}
 }
 
-AWirelessTransmitter* AWiTracingAgent::GetTX() const
+AWirelessTransmitter* AWiTracingAgent::GetTX()
 {
 	AWirelessTransmitter* TX = nullptr;
 	const int32 TXNum = TXs.Num();
