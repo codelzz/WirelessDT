@@ -15,7 +15,6 @@ AWiTracingAgent::AWiTracingAgent()
 	UdpSocketServerComponent = CastChecked<UUdpSocketServerComponent>(GetUdpSocketServerComponent());
 
 	UdpSocketServerComponent->SetupAttachment(Root);
-	
 }
 
 void AWiTracingAgent::BeginPlay()
@@ -31,7 +30,7 @@ void AWiTracingAgent::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UE_LOG(LogTemp, Warning, TEXT("WiTracing Tick"));
+	// UE_LOG(LogTemp, Warning, TEXT("WiTracing Tick"));
 
 }
 

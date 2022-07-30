@@ -2,6 +2,7 @@
 
 UUdpSocketServerComponent::UUdpSocketServerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
+	, Delegate(nullptr)
 {
 }
 
@@ -36,6 +37,7 @@ void UUdpSocketServerComponent::Listen()
 	UdpSocketServer = MakeShared<FUdpSocketServer>(
 		FUdpSocketServer::StringToEndpoint(ServerIP, ServerPort), 
 		FUdpSocketServer::StringToEndpoint(ClientIP, ClientPort));
+	UdpSocketServer->Delegate = this;
 
 	if (IsValid())
 	{

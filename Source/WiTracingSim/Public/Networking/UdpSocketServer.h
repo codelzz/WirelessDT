@@ -5,6 +5,12 @@
 #include "Networking.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 
+class FUdpSocketServerDelegate {
+public:
+	virtual void OnUdpSocketServerDataRecv(FString) = 0;
+	// virtual void OnDataSentCallback(FString) const = 0;
+};
+
 class FUdpSocketServer: public TSharedFromThis<FUdpSocketServer>
 {
 public:
@@ -36,4 +42,7 @@ protected:
 
 	TSharedPtr<FUdpSocketSender, ESPMode::ThreadSafe> Sender = nullptr;
 	TSharedPtr<FUdpSocketReceiver, ESPMode::ThreadSafe> Receiver = nullptr;
+
+public:
+	FUdpSocketServerDelegate *Delegate = nullptr;
 };

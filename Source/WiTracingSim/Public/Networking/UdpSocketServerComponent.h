@@ -7,8 +7,14 @@
 #include "UdpSocketServer.h"
 #include "UdpSocketServerComponent.generated.h"
 
+class FUdpSocketServerComponentDelegate {
+public:
+	virtual void OnUdpSocketServerComponentDataRecv(FString) = 0;
+	// virtual void OnDataSentCallback(FString) const = 0;
+};
+
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
-class UUdpSocketServerComponent : public USceneComponent
+class UUdpSocketServerComponent : public USceneComponent, public FUdpSocketServerDelegate
 {
 	GENERATED_UCLASS_BODY()
 
@@ -49,6 +55,19 @@ public:
 	/** Returns WirelessTransmitterComponent subobject */
 	TSharedPtr<class FUdpSocketServer> GetUdpSocketServer() const { return UdpSocketServer; }
 
+public:
+	virtual void OnUdpSocketServerDataRecv(FString Data) override
+	{
+		// deliver the callback to higher layer
+		if (Delegate)
+		{
+			Delegate->OnUdpSocketServerComponentDataRecv(Data);
+		}
+	}
+
 private:
 	TSharedPtr<class FUdpSocketServer> UdpSocketServer;
+
+public:
+	FUdpSocketServerComponentDelegate* Delegate = nullptr;
 };

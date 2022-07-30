@@ -1,9 +1,11 @@
 #include "Networking/UdpSocketServer.h"
 
+
 FUdpSocketServer::FUdpSocketServer(const FIPv4Endpoint& InServerEndpoint, const FIPv4Endpoint& InClientEndpoint)
 	: ClientEndpoint(InClientEndpoint)
 	, ServerEndpoint(InServerEndpoint)
 	, SocketSubSystem(ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM))
+	, Delegate(nullptr)
 {
 }
 
@@ -75,7 +77,7 @@ void FUdpSocketServer::Listen()
 	Socket->Listen(1);
 	{
 		Sender = MakeShared<FUdpSocketSender, ESPMode::ThreadSafe>(Socket, TEXT("UdpSocketSender"));
-		Receiver = MakeShared<FUdpSocketReceiver, ESPMode::ThreadSafe>(Socket, FTimespan::FromMilliseconds(1.0f), TEXT("UdpSocketReceiver"));
+		Receiver = MakeShared<FUdpSocketReceiver, ESPMode::ThreadSafe>(Socket, FTimespan::FromMilliseconds(0.0f), TEXT("UdpSocketReceiver"));
 		if (Receiver.IsValid())
 		{
 			Receiver->OnDataReceived().BindRaw(this, &FUdpSocketServer::OnDataReceived);
@@ -92,9 +94,17 @@ void FUdpSocketServer::Close()
 
 void FUdpSocketServer::OnDataReceived(const FArrayReaderPtr& ReaderPtr, const FIPv4Endpoint& Endpoint)
 {
-	// if data is send from client endpoint then do thing
-	// if (Endpoint == ClientEndpoint)
-	UE_LOG(LogTemp, Warning, TEXT("[%s] OnDataReceived -> %s"), *GetName(), *ArrayReaderPtrToString(ReaderPtr));
+	FString Data = *ArrayReaderPtrToString(ReaderPtr);
+	
+	int32 Index;
+	if (Data.FindChar(TEXT('}'), Index))
+	{
+		if (Delegate)
+		{
+			Data = Data.Mid(0, Index+1);
+			Delegate->OnUdpSocketServerDataRecv(Data);
+		}
+	}
 }
 
 bool FUdpSocketServer::Send(const TSharedRef<TArray<uint8>, ESPMode::ThreadSafe>& Data)

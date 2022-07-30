@@ -1,4 +1,7 @@
 APP_CONFIG = {
+	"max_buffer_size": 65507,
+    "server_endpoint": ("127.0.0.1", 8800),
+    "client_endpoint": ("127.0.0.1", 8000),
 }
 
 DATA_CONFIG = {
