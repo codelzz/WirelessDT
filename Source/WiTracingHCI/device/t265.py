@@ -1,6 +1,7 @@
 import pyrealsense2 as rs
 from thread.runnable import Runnable
 import utils
+import math
 
 
 class T265Proxy(Runnable):
@@ -9,7 +10,9 @@ class T265Proxy(Runnable):
         self.on_data_recv_fn = on_data_recv_fn
         self.pipe = rs.pipeline()
         self.config = rs.config()
-        self.config.enable_stream(rs.stream.pose)
+        # self.config.enable_stream(rs.stream.pose)
+        self.config.enable_all_streams()
+        self.payload = {}
 
     def start(self):
         self.pipe.start(self.config)
@@ -21,13 +24,44 @@ class T265Proxy(Runnable):
 
     def do(self):
         try:
-            # Wait for the next set of frames from the camera
             frames = self.pipe.wait_for_frames()
-            pose = frames.get_pose_frame()
-
-            if pose:
-                # pack data with current timestamp in millisecond
-                data = (utils.millisecond(), pose)
-                self.on_data_recv_fn(data)
+            frame = frames.get_pose_frame()
+            if frame:
+                # parse data
+                pose = frame.get_pose_data()
+                self.update_payload(pose)
+                self.on_data_recv_fn(self.payload)
         finally:
             pass
+
+    def update_payload(self, pose):
+        # convert to UE5 coordinate system
+        # ref: https://github.com/IntelRealSense/librealsense/blob/master/doc/t265.md
+
+        pitch, roll, yaw = self.parse_rotation(pose)
+        self.payload = {
+            'timestamp':utils.millisecond(),
+            'x':-pose.translation.z,
+            'y':pose.translation.x,
+            'z':pose.translation.y,
+            'vx':-pose.velocity.z,
+            'vy':pose.velocity.x,
+            'vz':pose.velocity.y,
+            'ax':-pose.acceleration.z,
+            'ay':pose.acceleration.x,
+            'az':pose.acceleration.y,
+            'pitch': pitch,
+            'roll': roll,
+            'yaw': yaw,
+        }
+
+    @staticmethod
+    def parse_rotation(pose):
+        w = pose.rotation.w
+        x = -pose.rotation.z
+        y = pose.rotation.x
+        z = -pose.rotation.y
+        pitch =  -math.asin(2.0 * (x*z - w*y)) * 180.0 / math.pi;
+        roll  =  math.atan2(2.0 * (w*x + y*z), w*w - x*x - y*y + z*z) * 180.0 / math.pi;
+        yaw   =  math.atan2(2.0 * (w*z + x*y), w*w + x*x - y*y - z*z) * 180.0 / math.pi;
+        return pitch, roll, yaw

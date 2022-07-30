@@ -53,31 +53,18 @@ class CSVProxy(Runnable):
             f.close()
 
     def format_motion_data_to_row(self, data):
-        timestamp, raw = data
-        pose = raw.get_pose_data()
-        row = {
-            'timestamp':timestamp,
-            'x':pose.translation.x,
-            'y':pose.translation.y,
-            'z':pose.translation.z,
-            'vx':pose.velocity.x,
-            'vy':pose.velocity.y,
-            'vz':pose.velocity.z,
-            'ax':pose.acceleration.x,
-            'ay':pose.acceleration.y,
-            'az':pose.acceleration.z,
-        }
+        row = {}
+        for field in MOTION_DATA_FIELDS:
+            if field in data.keys():
+                row[field] = data[field]
         return row
 
     def format_signal_data_to_row(self, data):
-        timestamp, raw = data
-        row = {
-            'timestamp':timestamp,
-            'address':raw[0],
-            'rssi':raw[1],
-        }
+        row = {}
+        for field in SIGNAL_DATA_FIELDS:
+            if field in data.keys():
+                row[field] = data[field]
         return row
-
 
     def do(self):
         if not self.motion_data_queue.empty():

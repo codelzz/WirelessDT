@@ -9,7 +9,6 @@ if __name__ == "__main__":
     SERVER_ENDPOINT = settings.APP_CONFIG['server_endpoint']
     CLIENT_ENDPOINT = settings.APP_CONFIG['client_endpoint']
 
-
     def on_data_sent(byte_data, address):
         print(f"{address} << {repr(byte_data)}")
 
@@ -28,5 +27,5 @@ if __name__ == "__main__":
         packet={'x':x,'y':y,'z':z,'rssi':0}
         json_obj = json.dumps(packet, indent = 0) 
         byte_data = str.encode(str(json_obj),'utf-8')
-        client.sendto(byte_data=byte_data, address=SERVER_ENDPOINT)
+        client.send(byte_data=byte_data, address=SERVER_ENDPOINT)
         time.sleep(0.01)

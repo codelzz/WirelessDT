@@ -18,6 +18,7 @@ class BLEProxy(Runnable):
         self.on_data_recv_fn = on_data_recv_fn
         self.serial_timeout = .1
         self.serial = serial.Serial(port=self.port, baudrate=self.baudrate , timeout=self.serial_timeout)
+        self.payload = {}
         self.print(f'Connected to {self.port}')
 
     def do(self):
@@ -25,8 +26,8 @@ class BLEProxy(Runnable):
             data = self.recv_data()
             if len(data) > 0 and self.on_data_recv_fn is not None:
                 data = self.parse_data(data)
-                data = (utils.millisecond(), data)
-                self.on_data_recv_fn(data)
+                self.update_payload(data)
+                self.on_data_recv_fn(self.payload)
         except serial.serialutil.SerialException as e:
             # exception happen when board is restarted while connecting
             self.print(f'Connection lost')
@@ -49,3 +50,10 @@ class BLEProxy(Runnable):
     def release(self):
         self.serial.close()
         self.print(f'Connection closed')
+
+    def update_payload(self, data):
+        self.payload = {
+            'timestamp':utils.millisecond(),
+            'address':data[0],
+            'rssi':data[1],
+        }

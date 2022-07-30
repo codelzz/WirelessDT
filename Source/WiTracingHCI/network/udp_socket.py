@@ -5,6 +5,7 @@ Reference:
 import socket
 import time
 import queue
+import json
 
 from thread.runnable import Runnable
 
@@ -16,14 +17,11 @@ class UdpSocketSender(UdpSocketRunnable):
     """
     Socket sender handle data sending task
     """
-    def __init__(self, socket, callback, wait_time=0.001):
+    def __init__(self, socket, callback, wait_time=0):
         super(UdpSocketSender, self).__init__(wait_time=wait_time)
         self.socket = socket
         self.callback = callback
         self.send_queue = queue.Queue()
-
-    def sendto(self, byte_data, address):
-        self.send_queue.put((byte_data, address))
 
     def do(self):
         # Send data from queue by socket with given address. 
@@ -35,11 +33,20 @@ class UdpSocketSender(UdpSocketRunnable):
             if self.callback is not None:
                 self.callback(byte_data, address)
 
+    def send(self, byte_data, address, is_async=False):
+        if is_async:
+            self.send_queue.put((byte_data, address))
+        else:
+            self.socket.sendto(byte_data, address)
+            if self.callback is not None:
+                self.callback(byte_data, address)
+
+
 class UdpSocketReceiver(UdpSocketRunnable):
     """
     Socket sender handle data receiving task
     """
-    def __init__(self, socket, callback, wait_time=0.001):
+    def __init__(self, socket, callback, wait_time=0):
         super(UdpSocketReceiver, self).__init__(wait_time=wait_time)
         self.socket = socket
         self.callback = callback
@@ -50,7 +57,8 @@ class UdpSocketReceiver(UdpSocketRunnable):
             if self.callback is not None:
                 self.callback(byte_data, address)
         except ConnectionError as error:
-            self.print(f'Disconnected! Reason: {error}')
+            #self.print(f'Disconnected! Reason: {error}')
+            pass
 
 class UdpSocketClient:
 
@@ -70,6 +78,12 @@ class UdpSocketClient:
         if self.receiver is not None:
             self.receiver.start()
 
-    def sendto(self, byte_data, address):
-        self.sender.sendto(byte_data=byte_data, address=address)
+
+    def send(self, byte_data, address, is_async=False):
+        self.sender.send(byte_data=byte_data,address=address, is_async=is_async)
+
+    def sendjson(self, data, address, is_async=False):
+        json_obj = json.dumps(data, indent = 0) 
+        byte_data = str.encode(str(json_obj),'utf-8')
+        self.send(byte_data=byte_data, address=address, is_async=is_async)
 

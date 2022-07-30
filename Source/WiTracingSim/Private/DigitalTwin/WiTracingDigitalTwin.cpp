@@ -16,6 +16,7 @@ AWiTracingDigitalTwin::AWiTracingDigitalTwin()
 	DigitalTwinData.SetLocation(this->GetActorLocation());
 	// Tick
 	PrimaryActorTick.bCanEverTick = true;
+	this->SetActorTickInterval(0.01);
 }
 
 void AWiTracingDigitalTwin::BeginPlay()
@@ -27,8 +28,11 @@ void AWiTracingDigitalTwin::BeginPlay()
 void AWiTracingDigitalTwin::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UE_LOG(LogTemp, Warning, TEXT("Tick -> %s"), *DigitalTwinData.GetLocation().ToString());
-	SetActorLocationAndRotation(DigitalTwinData.GetLocation(), this->GetActorRotation(), false, 0, ETeleportType::ResetPhysics);
+	if (bNeedSync)
+	{
+		SetActorLocationAndRotation(DigitalTwinData.GetLocation(), DigitalTwinData.GetRotator(), false, 0, ETeleportType::ResetPhysics);
+		bNeedSync = false;
+	}
 }
 
 void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString Data)
@@ -39,6 +43,7 @@ void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString Data)
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
 		FJsonObjectConverter::JsonObjectStringToUStruct(*Data, &DigitalTwinData, 0, 0);
+		bNeedSync = true;
 		// UE_LOG(LogTemp, Warning, TEXT("UDP -> %s"), *DigitalTwinData.GetLocation().ToString());
 		// we can't modify the location here, it only can be used in game thread
 	}

@@ -17,12 +17,25 @@ public:
 		float y;
 	UPROPERTY(BlueprintReadWrite, Category = "Location")
 		float z;
+	UPROPERTY(BlueprintReadWrite, Category = "Rotation")
+		float Pitch;
+	UPROPERTY(BlueprintReadWrite, Category = "Rotation")
+		float Yaw;
+	UPROPERTY(BlueprintReadWrite, Category = "Rotation")
+		float Roll;
 	UPROPERTY(BlueprintReadWrite, Category = "Signal")
 		float rssi;
+	UPROPERTY(BlueprintReadWrite, Category = "Signal")
+		FString address;
 
 	FVector GetLocation()
 	{
-		return FVector(x, y, z);
+		return FVector(x * 100.0f, y * 100.0f, z * 100.0f) ;
+	}
+
+	FRotator GetRotator()
+	{
+		return FRotator(Pitch, Yaw, Roll);
 	}
 
 	void SetLocation(FVector Location)
@@ -59,4 +72,5 @@ private:
 	virtual void OnUdpSocketServerComponentDataRecv(FString) override;
 
 	FDigitalTwinData DigitalTwinData;
+	bool bNeedSync = false;
 };
