@@ -34,7 +34,7 @@ void AWiTracingAgent::Tick(float DeltaTime)
 
 }
 
-void AWiTracingAgent::IterativeWiTracing(TArray<int64>& RSSIPdf, bool bVisualized)
+void AWiTracingAgent::IterativeWiTracing(FTransform Transform, TArray<int64>& RSSIPdf, bool bVisualized)
 {
 	// Need to be optimized by reducing redundant code compared to GetTX()
 	const int32 TXNum = TXs.Num();
@@ -45,7 +45,7 @@ void AWiTracingAgent::IterativeWiTracing(TArray<int64>& RSSIPdf, bool bVisualize
 		if (PlayerController)
 		{
 			AWirelessTransmitter* TX = nullptr;
-			FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
+			// FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
 			if (TXIndex < TXNum)
 			{
 				TX = TXs[TXIndex];
@@ -119,11 +119,12 @@ AWirelessTransmitter* AWiTracingAgent::GetTX()
 	return TX;
 }
 
-void AWiTracingAgent::GlobalWiTracing(TArray<int64>& RSSIPdf, bool bVisualized)
+void AWiTracingAgent::GlobalWiTracing(FTransform Transform, TArray<int64>& RSSIPdf, bool bVisualized)
 {
-	if (PlayerController)
+	// if (PlayerController)
 	{
-		FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
+		// todo: change player controller transform to receiver transform
+		// FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
 		UWiTracingRendererBlueprintLibrary::RenderWiTracing(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, RSSIPdf);
 	}
 }

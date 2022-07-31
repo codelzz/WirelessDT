@@ -12,8 +12,6 @@ AWiTracingDigitalTwin::AWiTracingDigitalTwin()
 	UdpSocketServerComponent->ServerPort = 8800;
 	UdpSocketServerComponent->ClientPort = 8000;
 	UdpSocketServerComponent->Delegate = this;
-	// Data Struct
-	DigitalTwinData.SetLocation(this->GetActorLocation());
 	// Tick
 	PrimaryActorTick.bCanEverTick = true;
 	this->SetActorTickInterval(0.01);
@@ -22,6 +20,8 @@ AWiTracingDigitalTwin::AWiTracingDigitalTwin()
 void AWiTracingDigitalTwin::BeginPlay()
 {
 	Super::BeginPlay();
+	// Set the BaseLocation
+	DigitalTwinData.BaseLocation = this->GetActorLocation();
 }
 
 
@@ -45,6 +45,5 @@ void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString Data)
 	{
 		FJsonObjectConverter::JsonObjectStringToUStruct(*Data, &DigitalTwinData, 0, 0);
 		bNeedSync = true;
-		// we can't modify the actor location here, it can only be changed in game thread
 	}
 }

@@ -87,10 +87,10 @@ public:
 	 * of TXs in the scene. This need to be solved in future version
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void IterativeWiTracing(TArray<int64>& RSSIPdf, bool bVisualized = true);
+	void IterativeWiTracing(FTransform Transform, TArray<int64>& RSSIPdf, bool bVisualized = true);
 	
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void GlobalWiTracing(TArray<int64>& RSSIPdf, bool bVisualized=true);
+	void GlobalWiTracing(FTransform Transform, TArray<int64>& RSSIPdf, bool bVisualized=true);
 	/**
 	 * Get the TX will be traced in next iterative witracing 
 	 */

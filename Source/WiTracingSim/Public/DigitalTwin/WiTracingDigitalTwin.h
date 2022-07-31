@@ -12,25 +12,25 @@ struct FDigitalTwinData
 
 public:
 	UPROPERTY(BlueprintReadWrite, Category = "Location")
-		float x;
+		float x = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Location")
-		float y;
+		float y = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Location")
-		float z;
+		float z = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Rotation")
-		float Pitch;
+		float Pitch = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Rotation")
-		float Yaw;
+		float Yaw = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Rotation")
-		float Roll;
+		float Roll = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Signal")
-		float rssi;
+		float rssi = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Signal")
-		FString address;
+		FString address = "";
 
 	FVector GetLocation()
 	{
-		return FVector(x * 100.0f, y * 100.0f, z * 100.0f) ;
+		return FVector(x * 100.0f + BaseLocation.X, y * 100.0f + BaseLocation.Y, z * 100.0f + +BaseLocation.Z) ;
 	}
 
 	FRotator GetRotator()
@@ -38,12 +38,7 @@ public:
 		return FRotator(Pitch, Yaw, Roll);
 	}
 
-	void SetLocation(FVector Location)
-	{
-		x = Location.X;
-		y = Location.Y;
-		z = Location.Z;
-	}
+	FVector BaseLocation = FVector(0,0,0);
 };
 
 UCLASS()
@@ -73,4 +68,5 @@ private:
 
 	FDigitalTwinData DigitalTwinData;
 	bool bNeedSync = false;
+	// FVector BaseLocation = FVector(0, 0, 0);
 };
