@@ -10,12 +10,21 @@ class T265Proxy(Runnable):
         self.on_data_recv_fn = on_data_recv_fn
         self.pipe = rs.pipeline()
         self.config = rs.config()
-        # self.config.enable_stream(rs.stream.pose)
         self.config.enable_all_streams()
         self.payload = {}
 
     def start(self):
-        self.pipe.start(self.config)
+        # Ref: Configure the option
+        # https://github.com/IntelRealSense/librealsense/issues/1011
+        # https://intelrealsense.github.io/librealsense/python_docs/_generated/pyrealsense2.option.html#pyrealsense2.option
+        self.profile = self.config.resolve(self.pipe)
+        self.sensor = self.profile.get_device().first_pose_sensor()
+        self.sensor.set_option(rs.option.enable_mapping, True)
+        self.sensor.set_option(rs.option.enable_relocalization, True)
+        self.sensor.set_option(rs.option.enable_pose_jumping, True)
+        self.sensor.set_option(rs.option.enable_dynamic_calibration, True)
+        self.sensor.set_option(rs.option.enable_map_preservation, True)
+        self.profile = self.pipe.start(self.config)
         super().start()
 
     def stop(self):
@@ -37,7 +46,6 @@ class T265Proxy(Runnable):
     def update_payload(self, pose):
         # convert to UE5 coordinate system
         # ref: https://github.com/IntelRealSense/librealsense/blob/master/doc/t265.md
-
         pitch, roll, yaw = self.parse_rotation(pose)
         self.payload = {
             'timestamp':utils.millisecond(),

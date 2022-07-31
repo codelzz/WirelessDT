@@ -6,7 +6,7 @@
 
 import os
 import time
-import pyrealsense2 as rs
+import json
 
 import settings
 from network.udp_socket import UdpSocketClient
@@ -35,7 +35,12 @@ if __name__ == "__main__":
 
     # Client -----------------------------------
     def on_data_sent(byte_data, address):
-        print(f"{address} << {repr(byte_data)}")
+        data = json.loads(byte_data.decode('utf-8'))
+        if bool(data):
+            print(f"x: {data['x']:.2f} y: {data['y']:.2f} z: {data['z']:.2f} " +
+                  f"pitch: {data['pitch']:.2f} yaw: {data['yaw']:.2f} roll: {data['roll']:.2f} " +
+                  f"address: {data['address']} rssi: {data['rssi']}")
+        # print(f"{address} << {repr(byte_data)}")
 
     def on_data_recv(byte_data, address):
         print(f"{address} >> {repr(byte_data)}")
@@ -44,19 +49,24 @@ if __name__ == "__main__":
 
     # Helper
     def merge_data(motion, signal):
-        if bool(motion) and bool (signal):
-            return {
-                'x':motion['x'],
-                'y':motion['y'],
-                'z':motion['z'],
-                'pitch':motion['pitch'],
-                'yaw':motion['yaw'],
-                'roll':motion['roll'],
-                'address':signal['address'],
-                'signal':signal['rssi'],
-            }
-        else:
-            return {}
+        data = {}
+        if bool(motion) and bool(signal):
+            data = {
+                    'x':motion['x'],
+                    'y':motion['y'],
+                    'z':motion['z'],
+                    'pitch':motion['pitch'],
+                    'yaw':motion['yaw'],
+                    'roll':motion['roll'],
+                    'address':"n/a",
+                    'rssi':-255,
+                    }
+            # if there is a present measurement from BLE
+            # instantaneity = motion['timestamp'] - signal['timestamp']
+            # if instantaneity > 0 and instantaneity < 2.5: # ms
+            data['address'] = signal['address']
+            data['rssi'] = signal['rssi']
+        return data
 
     # T265 -----------------------------------
     def on_motion_recv(data):

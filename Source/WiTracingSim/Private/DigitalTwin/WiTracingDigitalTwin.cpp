@@ -30,6 +30,7 @@ void AWiTracingDigitalTwin::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (bNeedSync)
 	{
+		// if synchorization is reqired then change the position
 		SetActorLocationAndRotation(DigitalTwinData.GetLocation(), DigitalTwinData.GetRotator(), false, 0, ETeleportType::ResetPhysics);
 		bNeedSync = false;
 	}
@@ -44,7 +45,6 @@ void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString Data)
 	{
 		FJsonObjectConverter::JsonObjectStringToUStruct(*Data, &DigitalTwinData, 0, 0);
 		bNeedSync = true;
-		// UE_LOG(LogTemp, Warning, TEXT("UDP -> %s"), *DigitalTwinData.GetLocation().ToString());
-		// we can't modify the location here, it only can be used in game thread
+		// we can't modify the actor location here, it can only be changed in game thread
 	}
 }
