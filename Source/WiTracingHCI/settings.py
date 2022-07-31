@@ -12,6 +12,7 @@ DATA_CONFIG = {
 	# head ['frame', 'x', 'y', 'z', 'velocity x', 'velocity y','velocity z', 'acceleration x', 'acceleration y', 'acceleration z']
 	'motion_fields':['timestamp', 'x','y','z','vx','vy','vz','ax','ay','az','pitch','yaw','roll'],
 	'signal_fields':['timestamp', 'address', 'rssi'],
+	'address_filter': {"50:d0:9a:e3:43:6a":"seeed xiao nRF52840"}
 }
 
 HARDWARE_CONFIG = {

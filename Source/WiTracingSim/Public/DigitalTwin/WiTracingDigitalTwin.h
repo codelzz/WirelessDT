@@ -56,6 +56,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Wi Tracing", meta = (AllowPrivateAccess = "true"))
 		TObjectPtr<class UUdpSocketServerComponent> UdpSocketServerComponent;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Wi Tracing", meta = (AllowPrivateAccess = "true"))
+		FDigitalTwinData Data;
+
 public:
 	UPROPERTY()
 		USceneComponent* Root;
@@ -66,7 +69,7 @@ private:
 	// UdpSocketServerComponent Callback
 	virtual void OnUdpSocketServerComponentDataRecv(FString) override;
 
-	FDigitalTwinData DigitalTwinData;
+	
 	bool bNeedSync = false;
 	// FVector BaseLocation = FVector(0, 0, 0);
 };

@@ -11,7 +11,7 @@ class BLEProxy(Runnable):
     """
     BLE Proxy - Communicate with Arduino board for ble related data acquisition
     """
-    def __init__(self, port, baudrate, on_data_recv_fn, wait_time=0.001):
+    def __init__(self, port, baudrate, on_data_recv_fn, address_filter=None, wait_time=0.001):
         super(BLEProxy, self).__init__(wait_time=wait_time)
         self.port = port
         self.baudrate = baudrate
@@ -19,6 +19,7 @@ class BLEProxy(Runnable):
         self.serial_timeout = .1
         self.serial = serial.Serial(port=self.port, baudrate=self.baudrate , timeout=self.serial_timeout)
         self.payload = {}
+        self.address_filter = address_filter
         self.print(f'Connected to {self.port}')
 
     def do(self):
@@ -26,8 +27,13 @@ class BLEProxy(Runnable):
             data = self.recv_data()
             if len(data) > 0 and self.on_data_recv_fn is not None:
                 data = self.parse_data(data)
-                self.update_payload(data)
-                self.on_data_recv_fn(self.payload)
+                if self.address_filter is not None:
+                    if data[0] in self.address_filter.keys():
+                        self.update_payload(data)
+                        self.on_data_recv_fn(self.payload)
+                else:
+                    self.update_payload(data)
+                    self.on_data_recv_fn(self.payload)
         except serial.serialutil.SerialException as e:
             # exception happen when board is restarted while connecting
             self.print(f'Connection lost')

@@ -21,7 +21,7 @@ void AWiTracingDigitalTwin::BeginPlay()
 {
 	Super::BeginPlay();
 	// Set the BaseLocation
-	DigitalTwinData.BaseLocation = this->GetActorLocation();
+	Data.BaseLocation = this->GetActorLocation();
 }
 
 
@@ -31,19 +31,19 @@ void AWiTracingDigitalTwin::Tick(float DeltaTime)
 	if (bNeedSync)
 	{
 		// if synchorization is reqired then change the position
-		SetActorLocationAndRotation(DigitalTwinData.GetLocation(), DigitalTwinData.GetRotator(), false, 0, ETeleportType::ResetPhysics);
+		SetActorLocationAndRotation(Data.GetLocation(), Data.GetRotator(), false, 0, ETeleportType::ResetPhysics);
 		bNeedSync = false;
 	}
 }
 
-void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString Data)
+void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString InData)
 {
 	// Parse data to struct
 	TSharedPtr<FJsonObject, ESPMode::ThreadSafe> JsonObject;
-	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(Data);
+	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(InData);
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
-		FJsonObjectConverter::JsonObjectStringToUStruct(*Data, &DigitalTwinData, 0, 0);
+		FJsonObjectConverter::JsonObjectStringToUStruct(*InData, &Data, 0, 0);
 		bNeedSync = true;
 	}
 }

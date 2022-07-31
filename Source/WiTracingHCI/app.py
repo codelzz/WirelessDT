@@ -24,6 +24,8 @@ if __name__ == "__main__":
     # BLE
     BLE_PORT = settings.HARDWARE_CONFIG['ble_port']
     BLE_BAUDRATE = 96000
+    # Data
+    ADDRESS_FILTER = settings.DATA_CONFIG['address_filter']
 
     csv_proxy = None
     client = None
@@ -77,8 +79,8 @@ if __name__ == "__main__":
     # BLE ------------------------------------
     def on_signal_recv(data):
         csv_proxy.enqueue_signal(data)
-        client.sendjson(merge_data(motion=t265_proxy.payload, signal=ble_proxy.payload), SERVER_ENDPOINT)
-    ble_proxy = BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv)
+        # client.sendjson(merge_data(motion=t265_proxy.payload, signal=ble_proxy.payload), SERVER_ENDPOINT)
+    ble_proxy = BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv, address_filter=ADDRESS_FILTER)
    
     csv_proxy.start()
     client.start()
