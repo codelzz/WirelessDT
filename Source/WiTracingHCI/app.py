@@ -14,6 +14,8 @@ from device.t265 import T265Proxy
 from device.ble import BLEProxy
 from utils import CSVProxy
 
+RSSI_MIN = -255
+
 
 if __name__ == "__main__":
     print("[INF] Begin.")
@@ -61,13 +63,13 @@ if __name__ == "__main__":
                     'yaw':motion['yaw'],
                     'roll':motion['roll'],
                     'address':"n/a",
-                    'rssi':-255,
+                    'rssi':RSSI_MIN,
                     }
             # if there is a present measurement from BLE
-            # instantaneity = motion['timestamp'] - signal['timestamp']
-            # if instantaneity > 0 and instantaneity < 2.5: # ms
-            data['address'] = signal['address']
-            data['rssi'] = signal['rssi']
+            instantaneity = abs(motion['timestamp'] - signal['timestamp'])
+            if instantaneity < 20: # ms
+                data['address'] = signal['address']
+                data['rssi'] = signal['rssi']
         return data
 
     # T265 -----------------------------------

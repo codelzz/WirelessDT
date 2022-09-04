@@ -24,7 +24,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Rotation")
 		float Roll = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Signal")
-		float rssi = 0.0f;
+		float rssi = -255.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Signal")
 		FString address = "";
 

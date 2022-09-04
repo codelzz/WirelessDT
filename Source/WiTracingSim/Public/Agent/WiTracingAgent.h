@@ -73,10 +73,6 @@ public:
 	UTextureRenderTarget2D* TextureRenderTarget;		// Texture holding data required for calculation
 	UPROPERTY(EditAnywhere, Category="Wi Tracing")
 	UTextureRenderTarget2D* TextureRenderTargetTemp;	// Texture for temporal used
-	UPROPERTY(EditAnywhere, Category = "Wi Tracing")
-	bool bEnableBackgroundDenoising = false;
-	UPROPERTY(EditAnywhere, Category = "Wi Tracing")
-	int32 BackgroundNoiseSNR = 20;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Wi Tracing", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UUdpSocketServerComponent> UdpSocketServerComponent;
@@ -87,25 +83,31 @@ public:
 	 * of TXs in the scene. This need to be solved in future version
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void IterativeWiTracing(FTransform Transform, TArray<int64>& RSSIPdf, bool bVisualized = true);
+	void IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized = true);
 	
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void GlobalWiTracing(FTransform Transform, TArray<int64>& RSSIPdf, bool bVisualized=true);
+	void GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized=true);
+
+	/**
+	 * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample
+	 * Instead of average over n signal period, we do n time sampling then find the maximum value
+	 * as our sample.
+	 */
+	/*UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+		int64 RSSISampling(TArray<float>& RSSIPdf, int64 n);*/
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+		int64 RSSISampling(TArray<float> RSSIPdf);
+
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+		int64 RSSIMultiSampling(TArray<float> RSSIPdf, int64 n=8);
+
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+		int64 RSSIMaxSampling(TArray<float> RSSIPdf);
 	/**
 	 * Get the TX will be traced in next iterative witracing 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 		AWirelessTransmitter* GetTX(); 
-
-	/*
-	 * Background Denoising (BackgroundNoiseSNR Interface)
-	 */ 
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing|Denoising")
-		bool GetBackgroundDenoising() { return bEnableBackgroundDenoising; }
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing|Denoising")
-		void SetBackgroundDenoising(bool EnableDenoising) { bEnableBackgroundDenoising = EnableDenoising;  }
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing|Denoising")
-		void SwitchBackgroundDenoising() { bEnableBackgroundDenoising = !bEnableBackgroundDenoising; }
 
 private:
 	// Is this really necessary?
@@ -118,8 +120,8 @@ private:
 	void InitRenderTargets();
 	void CachePlayerController();
 	void CacheTXs();
-	void RemoveBackgroundNoise(TArray<int64>& RSSIPdf);
 
 	TArray<AWirelessTransmitter*> TXs;
 	int32 TXIndex = 0;
+	const int64 RSSI_MIN = -255;
 };
