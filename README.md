@@ -6,9 +6,16 @@ This project aims to utilize UE5 path-tracing shader to simulate wireless signal
 
 In the next version, we need to make shader allow disable pdf calculation which consumes too much resource and slow down the whole system
 
+### Main Component
+
+#### Simulator (UE)
+
+* WiTracingAgent
+
 
 ### Improvement
-1. Improve RSSI Plot Code Quality (Add Comment)
+1. Improve RSSI Plot code quality (add comment)
+1. Allow switch RX between digital twin and player pawn
 
 
 ### Known Bugs
