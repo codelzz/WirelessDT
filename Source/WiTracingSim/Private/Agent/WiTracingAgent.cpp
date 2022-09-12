@@ -56,6 +56,14 @@ void AWiTracingAgent::Tick(float DeltaTime)
 
 }
 
+void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX)
+{
+	if (WirelessTX && WirelessRX)
+	{
+		UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), TextureRenderTarget, WirelessTX, WirelessRX);
+	}
+}
+
 void AWiTracingAgent::IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized)
 {
 	// Need to be optimized by reducing redundant code compared to GetTX()
@@ -240,7 +248,6 @@ void AWiTracingAgent::CachePlayerController()
 
 void AWiTracingAgent::InitRenderTargets()
 {
-	// Clean up texture
 	if (TextureRenderTarget)
 	{
 		UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), TextureRenderTarget, FLinearColor::Transparent);

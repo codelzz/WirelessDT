@@ -4,6 +4,8 @@
 #include "UObject/ObjectMacros.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "WiTracing/Devices/WirelessTransmitter.h"
+#include "WiTracing/Devices/WirelessTX.h"
+#include "WiTracing/Devices/WirelessRX.h"
 #include "Networking/UdpSocketServerComponent.h"
 #include "WiTracingAgent.generated.h"
 
@@ -87,6 +89,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 	void GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized=true);
+
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX);
 
 	/**
 	 * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample

@@ -34,3 +34,5 @@ Traceback (most recent call last):
     frames = self.pipe.wait_for_frames()
 RuntimeError: Frame didn't arrive within 5000
 ```
+
+2. We are current using unsafe approach to access TX actor in render thread. This might has potential issues when TX is dynamic.
