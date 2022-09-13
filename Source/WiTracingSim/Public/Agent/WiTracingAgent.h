@@ -93,6 +93,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX);
 
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	void MultiWiTracing(TArray<AWirelessTX*> WirelessTX, AWirelessRX* WirelessRX);
+
 	/**
 	 * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample
 	 * Instead of average over n signal period, we do n time sampling then find the maximum value

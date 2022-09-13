@@ -64,6 +64,14 @@ void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX
 	}
 }
 
+void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX)
+{
+	if (WirelessTXs.Num() > 0 && WirelessRX)
+	{
+		UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), TextureRenderTarget, WirelessTXs, WirelessRX);
+	}
+}
+
 void AWiTracingAgent::IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized)
 {
 	// Need to be optimized by reducing redundant code compared to GetTX()
