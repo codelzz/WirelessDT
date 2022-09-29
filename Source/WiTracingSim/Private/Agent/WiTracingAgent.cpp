@@ -248,7 +248,6 @@ void AWiTracingAgent::GlobalWiTracing(FTransform Transform, TArray<float>& RSSIP
 	}
 }
 
-
 void AWiTracingAgent::CachePlayerController()
 {
 	PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
