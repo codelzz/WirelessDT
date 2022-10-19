@@ -4,18 +4,18 @@ import time
 import settings
 import os
 
-
 from thread.runnable import Runnable
 
 CSV_FILE = settings.APP_CONFIG['preprocessed_csv_file']
 RSSI_MAX = settings.UNREAL_CONFIG['rssi_max']
 RSSI_MIN = settings.UNREAL_CONFIG['rssi_min']
+CSV_FIELDS = ['tx','x','y','z','rssi','timestamp'] 
 
 class Preprocessor(Runnable):
     def __init__(self, wait_time=0.01):
         super(Preprocessor, self).__init__(wait_time=wait_time)
         self.data_queue = queue.Queue()
-        self.csv_fields = ['tag', 'x', 'y', 'z', 'timestamp']+[ f'{x}' for x in range(RSSI_MAX, RSSI_MIN-1,-1)]
+        self.csv_fields = CSV_FIELDS
         self.init_csv()
         self.print("Ready.")
 
@@ -34,14 +34,12 @@ class Preprocessor(Runnable):
             f.close()
 
     def convert_to_csv_row(self, data):
-        csv_row = {'tag': data['tag'],
+        csv_row = {'tx': data['txname'],
         		   'x': data['coordinates'][0],
                    'y': data['coordinates'][1],
                    'z': data['coordinates'][2],
+                   'rssi': max(data['rssi'], -255),
                    'timestamp': data['timestamp']}
-        for i, x in enumerate(range(RSSI_MAX, RSSI_MIN-1,-1)):
-            key = f'{x}'
-            csv_row[key] = data['rssipdf'][i]
         return csv_row
 	# csv file operation end
 

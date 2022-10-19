@@ -10,7 +10,6 @@
 class FUdpSocketServerComponentDelegate {
 public:
 	virtual void OnUdpSocketServerComponentDataRecv(FString) = 0;
-	// virtual void OnDataSentCallback(FString) const = 0;
 };
 
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))

@@ -5,31 +5,10 @@
 #include "JsonObjectConverter.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
 
-TArray<float> CalcPdf(TArray<int64> CountArray)
-{
-	TArray<float> Pdf;
-	int64 Sum = 0;
-	for (auto Count : CountArray)
-	{
-		Sum += Count;
-	}
-	if (Sum > 0)
-	{
-		Pdf.Empty(CountArray.Num());
-		for (auto Count : CountArray)
-		{
-			Pdf.Emplace(Count * 1.0f / Sum);
-		}
-	}
-	return Pdf;
-}
-
-
 
 AWiTracingAgent::AWiTracingAgent()
 {
 	// PrimaryActorTick.bCanEverTick = true;
-
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 
@@ -51,16 +30,13 @@ void AWiTracingAgent::BeginPlay()
 void AWiTracingAgent::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	// UE_LOG(LogTemp, Warning, TEXT("WiTracing Tick"));
-
 }
 
-void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX)
+void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result)
 {
 	if (WirelessTX && WirelessRX)
 	{
-		UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), TextureRenderTarget, WirelessTX, WirelessRX);
+		UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), TextureRenderTarget, WirelessTX, WirelessRX, Result);
 	}
 }
 
@@ -72,57 +48,15 @@ void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWireless
 	}
 }
 
-void AWiTracingAgent::IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized)
+void AWiTracingAgent::UDPSendWiTracingResult(FWiTracingResult Result)
 {
-	// Need to be optimized by reducing redundant code compared to GetTX()
-	
-	const int32 TXNum = TXs.Num();
-	if (TXNum > 0)
+	if (UdpSocketServerComponent)
 	{
-		// If there is TXs in the scene do ...
-		TXIndex = TXIndex % (TXNum + 1);
-		// if (PlayerController)
+		FString JsonData;
+		if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
 		{
-			TArray<int64> RSSICount;
-			AWirelessTransmitter* TX = nullptr;
-			// FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
-			if (TXIndex < TXNum)
-			{
-				TX = TXs[TXIndex];
-				UWiTracingRendererBlueprintLibrary::RenderWiTracingByTransmitter(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, TX, RSSICount);
-			}
-			else
-			{
-				UWiTracingRendererBlueprintLibrary::RenderWiTracing(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, RSSICount);
-			}
-
-			// Calculate PDF
-			RSSIPdf = CalcPdf(RSSICount);
-
-			// not denoise required anymore
-			// remove background noise if required
-			//if (bEnableBackgroundDenoising)
-			//{
-			//	RemoveBackgroundNoise(RSSIPdf);
-			//}
-
-			// send result
-			if (UdpSocketServerComponent)
-			{
-				// todo: send pdf instead of count
-				FWiTracingResult StructData(
-					TX ? TX->GetName() : FString("Total"),
-					Transform.GetLocation(), 
-					RSSICount,
-					FDateTime::UtcNow().ToUnixTimestamp() * 1000 + FDateTime::UtcNow().GetMillisecond());
-				FString JsonData;
-				if (FJsonObjectConverter::UStructToJsonObjectString(StructData, JsonData, 0, 0))
-				{
-					UdpSocketServerComponent->Send(JsonData);
-				}
-			}
+			UdpSocketServerComponent->Send(JsonData);
 		}
-		TXIndex++;
 	}
 }
 
@@ -221,33 +155,24 @@ int64 AWiTracingAgent::RSSIMaxSampling(TArray<float> RSSIPdf)
 	return RSSI;
 }
 
-AWirelessTransmitter* AWiTracingAgent::GetTX()
+AWirelessTX* AWiTracingAgent::GetNextTX()
 {
-	AWirelessTransmitter* TX = nullptr;
+	// Method return the next TX from TX list
+	// The implementation may have protential issue if TXs list is dynamic
+	AWirelessTX* TX = nullptr;
 	const int32 TXNum = TXs.Num();
 	if (TXNum > 0)
 	{
-		const int32 Index = TXIndex % (TXNum + 1);
+		const int32 Index = IterativeTXIndex % TXNum;
 		if (Index < TXNum)
 		{
 			TX = TXs[Index];
 		}
+		IterativeTXIndex++;
+		IterativeTXIndex %= TXNum;
 	}
 	return TX;
 }
-
-void AWiTracingAgent::GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized)
-{
-	// if (PlayerController)
-	{
-		// todo: change player controller transform to receiver transform
-		// FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
-		TArray<int64> RSSICount;
-		UWiTracingRendererBlueprintLibrary::RenderWiTracing(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, RSSICount);
-		RSSIPdf = CalcPdf(RSSICount);
-	}
-}
-
 
 void AWiTracingAgent::CachePlayerController()
 {
@@ -272,11 +197,97 @@ void AWiTracingAgent::CacheTXs()
 	if (World)
 	{
 		TArray<AActor*> Actors;
-		UGameplayStatics::GetAllActorsOfClass(World, AWirelessTransmitter::StaticClass(), Actors);
+		UGameplayStatics::GetAllActorsOfClass(World, AWirelessTX::StaticClass(), Actors);
 		TXs.Empty();
 		for (AActor* Actor : Actors)
 		{
-			TXs.Add(static_cast<AWirelessTransmitter*>(Actor));
+			TXs.Add(static_cast<AWirelessTX*>(Actor));
 		}
 	}
 }
+
+//void AWiTracingAgent::GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized)
+//{
+//	// if (PlayerController)
+//	{
+//		// todo: change player controller transform to receiver transform
+//		// FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
+//		TArray<int64> RSSICount;
+//		UWiTracingRendererBlueprintLibrary::RenderWiTracing(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, RSSICount);
+//		//RSSIPdf = CalcPdf(RSSICount);
+//	}
+//}
+
+
+//void AWiTracingAgent::IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized)
+//{
+//	// Need to be optimized by reducing redundant code compared to GetTX()
+//	
+//	const int32 TXNum = TXs.Num();
+//	if (TXNum > 0)
+//	{
+//		// If there is TXs in the scene do ...
+//		TXIndex = TXIndex % (TXNum + 1);
+//		// if (PlayerController)
+//		{
+//			TArray<int64> RSSICount;
+//			AWirelessTransmitter* TX = nullptr;
+//			// FTransform Transform = PlayerController->PlayerCameraManager->GetActorTransform();
+//			if (TXIndex < TXNum)
+//			{
+//				TX = TXs[TXIndex];
+//				UWiTracingRendererBlueprintLibrary::RenderWiTracingByTransmitter(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, TX, RSSICount);
+//			}
+//			else
+//			{
+//				UWiTracingRendererBlueprintLibrary::RenderWiTracing(GetWorld(), Transform, bVisualized ? TextureRenderTarget : TextureRenderTargetTemp, RSSICount);
+//			}
+//
+//			// Calculate PDF
+//			//RSSIPdf = CalcPdf(RSSICount);
+//
+//			// not denoise required anymore
+//			// remove background noise if required
+//			//if (bEnableBackgroundDenoising)
+//			//{
+//			//	RemoveBackgroundNoise(RSSIPdf);
+//			//}
+//
+//			// send result
+//			if (UdpSocketServerComponent)
+//			{
+//				// todo: send pdf instead of count
+//				/*FWiTracingResult StructData(
+//					TX ? TX->GetName() : FString("Total"),
+//					Transform.GetLocation(), 
+//					RSSICount,
+//					FDateTime::UtcNow().ToUnixTimestamp() * 1000 + FDateTime::UtcNow().GetMillisecond());
+//				FString JsonData;
+//				if (FJsonObjectConverter::UStructToJsonObjectString(StructData, JsonData, 0, 0))
+//				{
+//					UdpSocketServerComponent->Send(JsonData);
+//				}*/
+//			}
+//		}
+//		TXIndex++;
+//	}
+//}
+
+//TArray<float> CalcPdf(TArray<int64> CountArray)
+//{
+//	TArray<float> Pdf;
+//	int64 Sum = 0;
+//	for (auto Count : CountArray)
+//	{
+//		Sum += Count;
+//	}
+//	if (Sum > 0)
+//	{
+//		Pdf.Empty(CountArray.Num());
+//		for (auto Count : CountArray)
+//		{
+//			Pdf.Emplace(Count * 1.0f / Sum);
+//		}
+//	}
+//	return Pdf;
+//}
