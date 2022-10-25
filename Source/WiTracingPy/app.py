@@ -10,9 +10,7 @@ if __name__ == "__main__":
     SERVER_ENDPOINT = settings.NETWORK_CONFIG['server_endpoint']
     CLIENT_ENDPOINT = settings.NETWORK_CONFIG['client_endpoint']
 
-    #preprocessor = Preprocessor(wait_time=0.01)
-    #preprocessor.start()
-
+    preprocessor = None
     predictor = None
     client = None
     
@@ -34,7 +32,11 @@ if __name__ == "__main__":
         data = {k.lower(): v for k, v in data.items()} # convert to lower
         # ['txname','rxname','coordinates','rssi','timestamp']
         # preprocessor.enqueue(data)
+        # print(data)
         predictor.enqueue(data)
+
+    # preprocessor = Preprocessor(wait_time=0.01)
+    # preprocessor.start()
 
     predictor = Predictor(on_predict=on_predict)
     predictor.start()
@@ -43,11 +45,6 @@ if __name__ == "__main__":
     client.start()
 
     while True:
-        # [ISSUE] why increasing decimal places can help to eliminate the 
-        # error buffer at unreal server side?
-        # data = f'{time.time():.10f}'
-        # byte_data = data.encode("utf-8")
-        # client.sendto(byte_data=byte_data, address=SERVER_ENDPOINT)
         try:
             time.sleep(0.1)
         except KeyboardInterrupt:

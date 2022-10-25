@@ -69,7 +69,6 @@ private:
 	// UdpSocketServerComponent Callback
 	virtual void OnUdpSocketServerComponentDataRecv(FString) override;
 
-	
 	bool bNeedSync = false;
 	// FVector BaseLocation = FVector(0, 0, 0);
 };

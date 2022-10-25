@@ -9,8 +9,8 @@ AWiTracingDigitalTwin::AWiTracingDigitalTwin()
 	UdpSocketServerComponent = CreateDefaultSubobject<UUdpSocketServerComponent>(TEXT("UdpSocketServerComponent0"));
 	UdpSocketServerComponent = CastChecked<UUdpSocketServerComponent>(GetUdpSocketServerComponent());
 	UdpSocketServerComponent->SetupAttachment(Root);
-	UdpSocketServerComponent->ServerPort = 8800;
-	UdpSocketServerComponent->ClientPort = 8000;
+	UdpSocketServerComponent->ServerPort = 9000;
+	UdpSocketServerComponent->ClientPort = 9001;
 	UdpSocketServerComponent->Delegate = this;
 	// Tick
 	PrimaryActorTick.bCanEverTick = true;
