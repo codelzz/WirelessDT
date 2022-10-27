@@ -35,8 +35,8 @@ if __name__ == "__main__":
         # print(data)
         predictor.enqueue(data)
 
-    # preprocessor = Preprocessor(wait_time=0.01)
-    # preprocessor.start()
+    #preprocessor = Preprocessor(wait_time=0.01)
+    #preprocessor.start()
 
     predictor = Predictor(on_predict=on_predict)
     predictor.start()

@@ -16,7 +16,7 @@ DATA_CONFIG = {
 }
 
 HARDWARE_CONFIG = {
-	'ble_port':'COM7',
+	'ble_port':['COM4','COM3'],
 	'baudrate':96000,
 }
 

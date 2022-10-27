@@ -40,6 +40,8 @@ class T265Proxy(Runnable):
                 pose = frame.get_pose_data()
                 self.update_payload(pose)
                 self.on_data_recv_fn(self.payload)
+        except:
+            print('t265 failed')
         finally:
             pass
 
