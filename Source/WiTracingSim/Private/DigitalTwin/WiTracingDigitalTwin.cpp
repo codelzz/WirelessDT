@@ -43,7 +43,13 @@ void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString InData)
 	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(InData);
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
+		const float PrevRSSI = Data.rssi;
 		FJsonObjectConverter::JsonObjectStringToUStruct(*InData, &Data, 0, 0);
+		// If there is no valid RSSI detected, use previous value
+		if (!(Data.rssi > -255))
+		{
+			Data.rssi = PrevRSSI;
+		}
 		bNeedSync = true;
 	}
 }
