@@ -3,52 +3,12 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "WiTracing/Devices/WirelessTransmitter.h"
 #include "WiTracing/Devices/WirelessTX.h"
 #include "WiTracing/Devices/WirelessRX.h"
+#include "WiTracing/WiTracingRendererBlueprintLibrary.h"
 #include "Networking/UdpSocketServerComponent.h"
 #include "WiTracingAgent.generated.h"
 
-
-USTRUCT()
-struct FWiTracingResult
-{
-	GENERATED_USTRUCT_BODY()
-
-	// Here we use lowercase for attribute naming 
-	// because it will affect the key when convert to json string
-
-	UPROPERTY()
-		FString tag;
-
-
-	UPROPERTY()
-		TArray<float> coordinates;
-
-	UPROPERTY()
-		TArray<int64> rssipdf;
-
-
-	UPROPERTY()
-		int64 timestamp;
-
-	FWiTracingResult()
-	{
-		coordinates.Empty();
-		rssipdf.Empty();
-	}
-
-	FWiTracingResult(FString InTag, FVector InCoordinates, TArray<int64> InRSSIPdf, int64 InTimestamp)
-	{
-		tag = InTag;
-		timestamp = InTimestamp;
-		float TempCoordinates[] = { InCoordinates.X, InCoordinates.Y, InCoordinates.Z };
-		coordinates.Empty();
-		coordinates.Append(TempCoordinates, UE_ARRAY_COUNT(TempCoordinates));
-		rssipdf.Empty();
-		rssipdf = InRSSIPdf;
-	}
-};
 
 /**
  *  AWiTracingAgent is a management agent to control the wi tracing process in the scene.
@@ -84,17 +44,21 @@ public:
 	 * for one TX. This might signficantly affect the scalability of size of environment and limit the number
 	 * of TXs in the scene. This need to be solved in future version
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized = true);
+	//UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	//void IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized = true);
 	
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized=true);
+	//UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	//void GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized=true);
 
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX);
+	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result);
 
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 	void MultiWiTracing(TArray<AWirelessTX*> WirelessTX, AWirelessRX* WirelessRX);
+
+	// Send Result to UDP Client
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	void UDPSendWiTracingResult(FWiTracingResult Result);
 
 	/**
 	 * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample
@@ -115,7 +79,11 @@ public:
 	 * Get the TX will be traced in next iterative witracing 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-		AWirelessTransmitter* GetTX(); 
+		AWirelessTX* GetNextTX(); 
+	
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+		TArray<AWirelessTX*> GetTXs() { return TXs; };
+
 
 private:
 	// Is this really necessary?
@@ -129,7 +97,7 @@ private:
 	void CachePlayerController();
 	void CacheTXs();
 
-	TArray<AWirelessTransmitter*> TXs;
-	int32 TXIndex = 0;
+	TArray<AWirelessTX*> TXs;
+	int32 IterativeTXIndex = 0;
 	const int64 RSSI_MIN = -255;
 };

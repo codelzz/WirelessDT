@@ -40,6 +40,11 @@ class T265Proxy(Runnable):
                 pose = frame.get_pose_data()
                 self.update_payload(pose)
                 self.on_data_recv_fn(self.payload)
+        except:
+            print('[ERR] T265 failed')
+            self.pipe.stop()
+            self.pipe.start()
+            print('[INF] Restart T265 pipe')
         finally:
             pass
 

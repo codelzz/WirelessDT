@@ -9,8 +9,8 @@ AWiTracingDigitalTwin::AWiTracingDigitalTwin()
 	UdpSocketServerComponent = CreateDefaultSubobject<UUdpSocketServerComponent>(TEXT("UdpSocketServerComponent0"));
 	UdpSocketServerComponent = CastChecked<UUdpSocketServerComponent>(GetUdpSocketServerComponent());
 	UdpSocketServerComponent->SetupAttachment(Root);
-	UdpSocketServerComponent->ServerPort = 8800;
-	UdpSocketServerComponent->ClientPort = 8000;
+	UdpSocketServerComponent->ServerPort = 9000;
+	UdpSocketServerComponent->ClientPort = 9001;
 	UdpSocketServerComponent->Delegate = this;
 	// Tick
 	PrimaryActorTick.bCanEverTick = true;
@@ -43,7 +43,13 @@ void AWiTracingDigitalTwin::OnUdpSocketServerComponentDataRecv(FString InData)
 	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(InData);
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
+		const float PrevRSSI = Data.rssi;
 		FJsonObjectConverter::JsonObjectStringToUStruct(*InData, &Data, 0, 0);
+		// If there is no valid RSSI detected, use previous value
+		if (!(Data.rssi > -255))
+		{
+			Data.rssi = PrevRSSI;
+		}
 		bNeedSync = true;
 	}
 }

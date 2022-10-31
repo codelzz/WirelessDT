@@ -32,7 +32,8 @@ if __name__ == "__main__":
     csv_proxy = None
     client = None
     t265_proxy = None
-    ble_proxy = None
+    # dura ble
+    ble_proxies = None
 
     # CSV -----------------------------------
     csv_proxy = CSVProxy(wait_time=0.01)
@@ -82,12 +83,17 @@ if __name__ == "__main__":
     def on_signal_recv(data):
         csv_proxy.enqueue_signal(data)
         # client.sendjson(merge_data(motion=t265_proxy.payload, signal=ble_proxy.payload), SERVER_ENDPOINT)
-    ble_proxy = BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv, address_filter=ADDRESS_FILTER)
+    
+    for port in BLE_PORT:
+        ble_proxies.append(BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv, address_filter=None)) 
+
+    # ble_proxy = BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv, address_filter=ADDRESS_FILTER)
    
     csv_proxy.start()
     client.start()
     t265_proxy.start()
-    ble_proxy.start()
+    for proxy in ble_proxies:
+        proxy.start()
 
     while True:
         try:
@@ -95,5 +101,7 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             break
 
-    ble_proxy.release()
+    # ble_proxy.release()
+    for proxy in ble_proxies:
+        proxy.release()
     print("[INF] Completed!")

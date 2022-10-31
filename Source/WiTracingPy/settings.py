@@ -6,6 +6,7 @@ NETWORK_CONFIG = {
 
 APP_CONFIG = {
     "preprocessed_csv_file": "data/preprocessed_data.csv",
+    "historical_csv_file": "data/data.csv",
     "checkpoint_path": "checkpoints/deepAR",
     'training_history': "checkpoints/deepAR/history.csv",
     "training_epochs": 1,

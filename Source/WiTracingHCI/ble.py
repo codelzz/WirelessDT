@@ -14,9 +14,15 @@ if __name__ == "__main__":
 
     # BLE ------------------------------------
     def on_signal_recv(data):
-        print(f"address: {data['address']} rssi:{data['rssi']}")
-    ble_proxy = BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv)
-    ble_proxy.start()
+        print(f"{data['address']} rssi:{data['rssi']}")
+
+    ble_proxies = []
+
+    for port in BLE_PORT:
+        ble_proxies.append(BLEProxy(port=port, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv))
+    
+    for proxy in ble_proxies:
+        proxy.start()
 
     while True:
         try:
@@ -24,5 +30,6 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             break
 
-    ble_proxy.release()
+    for proxy in ble_proxies:
+        proxy.release()
     print("[INF] Completed!")

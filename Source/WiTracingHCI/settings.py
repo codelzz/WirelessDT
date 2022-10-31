@@ -1,8 +1,8 @@
 APP_CONFIG = {
 	# "max_buffer_size": 65507,
-	"server_endpoint": ("192.168.31.110", 8800),
-    # "server_endpoint": ("127.0.0.1", 8800),
-    "client_endpoint": ("", 8000), # reach able by all address
+	"server_endpoint": ("192.168.31.110", 9000),
+    # "server_endpoint": ("127.0.0.1", 9000),
+    "client_endpoint": ("", 9001), # reach able by all address
 }
 
 DATA_CONFIG = {
@@ -16,7 +16,7 @@ DATA_CONFIG = {
 }
 
 HARDWARE_CONFIG = {
-	'ble_port':'COM7',
+	'ble_port':['COM4','COM3'],
 	'baudrate':96000,
 }
 
