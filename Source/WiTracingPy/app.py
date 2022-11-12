@@ -7,7 +7,7 @@ from preprocess.preprocessor import Preprocessor
 from dl.predictor import Predictor
 
 if __name__ == "__main__":
-    SERVER_ENDPOINT = settings.NETWORK_CONFIG['server_endpoint']
+    # SERVER_ENDPOINT = settings.NETWORK_CONFIG['server_endpoint']
     CLIENT_ENDPOINT = settings.NETWORK_CONFIG['client_endpoint']
 
     preprocessor = None
