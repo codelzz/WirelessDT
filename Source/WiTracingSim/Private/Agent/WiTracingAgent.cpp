@@ -32,19 +32,35 @@ void AWiTracingAgent::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result)
+void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result, bool OctahedralProjection, bool bDenoised, bool bVisualized)
 {
 	if (WirelessTX && WirelessRX)
 	{
-		UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), TextureRenderTarget, WirelessTX, WirelessRX, Result);
+		UTextureRenderTarget2D* RenderTarget = TextureRenderTargetTemp;
+		if (bVisualized) {
+			RenderTarget = TextureRenderTarget;
+		}
+		UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), RenderTarget, WirelessTX, WirelessRX, Result, OctahedralProjection, bDenoised, bVisualized);
 	}
 }
 
-void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX)
+void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection, bool bDenoised, bool bVisualized)
 {
 	if (WirelessTXs.Num() > 0 && WirelessRX)
 	{
-		UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), TextureRenderTarget, WirelessTXs, WirelessRX);
+		UTextureRenderTarget2D* RenderTarget = TextureRenderTargetTemp;
+		if (bVisualized) {
+			RenderTarget = TextureRenderTarget;
+		}
+		UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), RenderTarget, WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised, bVisualized);
+	}
+}
+
+void AWiTracingAgent::PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection, bool bDenoised) {
+	if (WirelessTXs.Num() > 0 && WirelessRX)
+	{
+		UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
+		UWiTracingRendererBlueprintLibrary::PreviewWiTracing(GetWorld(), RenderTarget, WirelessTXs, WirelessRX, OctahedralProjection, bDenoised, true);
 	}
 }
 

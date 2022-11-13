@@ -51,10 +51,13 @@ public:
 	//void GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized=true);
 
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result);
+	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result, bool OctahedralProjection = true, bool bDenoised = false, bool bVisualized = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	void MultiWiTracing(TArray<AWirelessTX*> WirelessTX, AWirelessRX* WirelessRX);
+	void MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection = true, bool bDenoised = false, bool bVisualized = false);
+
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	void PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection = true, bool bDenoised = false);
 
 	// Send Result to UDP Client
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
