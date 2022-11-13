@@ -35,9 +35,9 @@ class Preprocessor(Runnable):
 
     def convert_to_csv_row(self, data):
         csv_row = {'tx': data['txname'],
-        		   'x': data['coordinates'][0],
-                   'y': data['coordinates'][1],
-                   'z': data['coordinates'][2],
+        		   'x': data['rxx'],
+                   'y': data['rxy'],
+                   'z': data['rxz'],
                    'rssi': max(data['rssi'], -255),
                    'timestamp': data['timestamp']}
         return csv_row

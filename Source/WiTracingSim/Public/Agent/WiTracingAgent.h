@@ -81,8 +81,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 		AWirelessTX* GetNextTX(); 
 	
+	/// Get TXs
+	/// =======================
+	/// Get all transmitters
+	///	- returns: all transmitter in current world
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 		TArray<AWirelessTX*> GetTXs() { return TXs; };
+
+	/// Get TXs within range
+	/// =======================
+	/// Get all transmitters within range
+	///	- returns: transmitter in range
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+		TArray<AWirelessTX*> GetTXsInRange(FVector Origin, float Radius);
 
 
 private:

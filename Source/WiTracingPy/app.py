@@ -7,7 +7,7 @@ from preprocess.preprocessor import Preprocessor
 from dl.predictor import Predictor
 
 if __name__ == "__main__":
-    SERVER_ENDPOINT = settings.NETWORK_CONFIG['server_endpoint']
+    # SERVER_ENDPOINT = settings.NETWORK_CONFIG['server_endpoint']
     CLIENT_ENDPOINT = settings.NETWORK_CONFIG['client_endpoint']
 
     preprocessor = None
@@ -31,15 +31,15 @@ if __name__ == "__main__":
         data = json.loads(byte_data.decode('utf-8'))
         data = {k.lower(): v for k, v in data.items()} # convert to lower
         # ['txname','rxname','coordinates','rssi','timestamp']
-        # preprocessor.enqueue(data)
+        preprocessor.enqueue(data)
         # print(data)
-        predictor.enqueue(data)
+        # predictor.enqueue(data)
 
-    #preprocessor = Preprocessor(wait_time=0.01)
-    #preprocessor.start()
+    preprocessor = Preprocessor(wait_time=0.01)
+    preprocessor.start()
 
-    predictor = Predictor(on_predict=on_predict)
-    predictor.start()
+    #predictor = Predictor(on_predict=on_predict)
+    #predictor.start()
 
     client = UdpSocketClient(CLIENT_ENDPOINT, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
     client.start()

@@ -60,6 +60,18 @@ void AWiTracingAgent::UDPSendWiTracingResult(FWiTracingResult Result)
 	}
 }
 
+TArray<AWirelessTX*> AWiTracingAgent::GetTXsInRange(FVector Origin, float Radius) {
+	TArray<AWirelessTX*> InRangeTXs;
+	InRangeTXs.Empty();
+	for (AWirelessTX* TX : TXs)
+	{
+		if (FVector::Dist(Origin, TX->GetActorLocation()) < Radius) {
+			InRangeTXs.Add(TX);
+		}
+	}
+	return InRangeTXs;
+}
+
 int64 AWiTracingAgent::RSSISampling(TArray<float> RSSIPdf)
 {
 	// We based the fact that stronger signal has better reception rate
