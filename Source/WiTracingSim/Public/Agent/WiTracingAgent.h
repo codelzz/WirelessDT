@@ -98,6 +98,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 		TArray<AWirelessTX*> GetTXsInRange(FVector Origin, float Radius);
 
+	/// Get TXs out of range
+	/// =======================
+	/// Get all transmitters within range
+	///	- returns: transmitter outside the range
+	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+		TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
 
 private:
 	// Is this really necessary?

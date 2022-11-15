@@ -81,7 +81,20 @@ TArray<AWirelessTX*> AWiTracingAgent::GetTXsInRange(FVector Origin, float Radius
 	InRangeTXs.Empty();
 	for (AWirelessTX* TX : TXs)
 	{
-		if (FVector::Dist(Origin, TX->GetActorLocation()) < Radius) {
+		if (FVector::Dist(Origin, TX->GetActorLocation()) <= Radius) {
+			InRangeTXs.Add(TX);
+		}
+	}
+	return InRangeTXs;
+}
+
+
+TArray<AWirelessTX*> AWiTracingAgent::GetTXsOutRange(FVector Origin, float Radius) {
+	TArray<AWirelessTX*> InRangeTXs;
+	InRangeTXs.Empty();
+	for (AWirelessTX* TX : TXs)
+	{
+		if (FVector::Dist(Origin, TX->GetActorLocation()) > Radius) {
 			InRangeTXs.Add(TX);
 		}
 	}
