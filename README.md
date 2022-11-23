@@ -38,7 +38,7 @@ After project cloned, we need to compile the project.
 2. `right click` the `.uproject`  again select `Generate Visual Studio project file`. Then solution file end with `.sln` should appear.
 3. Open the `.sln` file and compile project.
 
-### STEP3: RUN the Digital Twin Platform
+### STEP3: Run the Digital Twin Platform
 
 After compiling, we can double click the  `.uproject`  file to launch the platform. The `DemoOffice_30mx30m` map is the default game level which can be executed without Physical Twin. (You can change to the other map from content fold window under All>Content>Demo>Map. The `DemoCorridor_Calibration` level is the calibration environment which required Physical Twin.)
 
