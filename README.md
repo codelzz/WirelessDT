@@ -12,7 +12,7 @@ Wireless technology has become one of the most important parts of our daily rout
 
 *NOTICES:* WirelessDT can only be executed on Windows System with NVIDIA RTX GPU. The suggest GPU hardware is RTX3070 or RTX4090.
 
-To use WirelessDT, use need to clone both WirelessDT and the WiTracing Unreal Engine (UE) repositories.
+To use WirelessDT, we need to clone both WirelessDT and the WiTracing Unreal Engine (UE) repositories.
 
 ### STEP 1: Clone WiTracing Unreal Engine Project.
 
@@ -24,7 +24,7 @@ After associated the accounts, we should have access to our [Unreal Engine Fork]
 git clone https://github.com/codelzz/UnrealEngine.git
 ```
 
-After cloned the UE source code, we can refer to the official page [Downloading Unreal Engine Source Code](https://docs.unrealengine.com/5.1/en-US/downloading-unreal-engine-source-code/) for engine setup. After setup UE source code, we need to compiling it to generate the binary files.
+After cloned the UE source code, you can refer to the official page [Downloading Unreal Engine Source Code](https://docs.unrealengine.com/5.1/en-US/downloading-unreal-engine-source-code/) for engine setup. After setup UE source code, we need to compiling it to generate the binary files.
 
 ### STEP2: Clone WirelessDT Project
 
@@ -35,10 +35,10 @@ git clone https://github.com/codelzz/WirelessDT.git
 After project cloned, we need to compile the project. 
 
 1. `right click` the `.uproject` then select  `Switch Unreal Engine Version...`, choose the one with `Source build ....`. This will associate `WirelessDT` with `WiTracing Unreal Engine`. 
-2. `right click` the `WiTracingSim.uproject` then select `Generate Visual Studio project file`. Then the Visual Studio solution file end with `.sln` should appear.
+2. `right click` the `.uproject`  again select `Generate Visual Studio project file`. Then solution file end with `.sln` should appear.
 3. Open the `.sln` file and compile project.
 
-**STEP3: RUN the Digital Twin Platform**
+### STEP3: RUN the Digital Twin Platform
 
 After compiling, we can double click the  `.uproject`  file to launch the platform. The `DemoOffice_30mx30m` map is the default game level which can be executed without Physical Twin. (You can change to the other map from content fold window under All>Content>Demo>Map. The `DemoCorridor_Calibration` level is the calibration environment which required Physical Twin.)
 
