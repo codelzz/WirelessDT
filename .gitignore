@@ -845,3 +845,6 @@ FodyWeavers.xsd
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,unrealengine,visualstudio,c++,python,pycharm,jupyternotebooks
 
 *.ipch
+
+# other
+*.csv
