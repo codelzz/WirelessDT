@@ -44,6 +44,88 @@ After compiling, we can double click the  `.uproject`  file to launch the platfo
 
 Now, you can click `Play` button in the Editor to start the platform.
 
+## Advanced Settings
+
+### WiTracing Engine
+
+We provide configuration of WiTracing Engine through Unreal Engine Editor Command Line Interface. Press <**\`**> button to activate the Command Line Interface, Then type in prefix `r.WiTracing.` for available commands:
+
+| Command                    | Description                                                  | Type  |
+| -------------------------- | ------------------------------------------------------------ | ----- |
+| r.WiTracing.TXPower        | The transmit power of the transmitter (default 25 dBm)       | Int   |
+| r.WiTracing.Wavelength     | The wavelength of the transmit signal (default 0.125 m for 2.4 GHz) | Float |
+| r.WiTracing.RXSensitivity  | The receiver sensitivity (default -95 dBm)                   | Int   |
+| r.WiTracing.SamplePerPixel | The number of WiTracing sample for each pixel per frame      | Int   |
+| r.WiTracing.MaxBounce      | The maximum number of bounces for each WiTracing ray         | Int   |
+
+### Data Sharing API Endpoint
+
+To change the endpoint for data sharing, we can configure the setting of IP and Port in `WiTracingAgent` from `UE Editor Outliner` window. The data is transmitted in JSON format.
+
+### Auto-Spawn AI
+
+The number of auto spawn AI can be changed by `Number of AIs` in AISpawn actor. This will impact the number of randomly walking characters in runtime.
+
+### Target AI Path
+
+The path of target AI carrying the wireless receiver can be adjusted by changed the trajectory of `AISpline` Actor.
+
+Beside above settings, we open-source our project and provide full freedom for other researchers or developer to customize their virtual environment with UE Editor.
+
+## Extra Setup for DEMO reproduction.
+
+To reproduce the demo, the physical twin hardware and the localization application is required.
+
+Here is detail settings and environment:
+
+#### Physical Twin Hardware Components
+
+| Component       | Hardware                               |
+| --------------- | -------------------------------------- |
+| Wireless Sensor | Seeed Studio XIAO nRF52840             |
+| Location Sensor | Intel® RealSense™ Tracking Camera T265 |
+| Mainboard       | Raspberry Pi 4 Model B                 |
+| Power Supply    | 5V/3A Power bank                       |
+
+The python script for physical twin state synchronization is located at `\Source\WiTracingHCI` .  To run the hardware, we need to upload the script in Raspberry Pi 4 Model B, then execute it by 
+
+```shell
+sudo python app.py
+```
+
+(The Arduino program for XIAO nRF52840 is in `\Source\WiTracingHCI\WiTracingBLE\RX`)
+
+#### Platform Deployment Environment
+
+| Component | Setup                          |
+| --------- | ------------------------------ |
+| System    | Windows 10 Pro                 |
+| Processor | Intel(R) i7-10870H CPU         |
+| RAM       | 16.0 GB                        |
+| GPU       | NVIDIA GeForce RTX 3070 Laptop |
+
+#### WiTracing Parameter
+
+| Parameter                          | Value                  |
+| ---------------------------------- | ---------------------- |
+| Wireless Signal Wavelength         | 0.125m (e.g. 2.4GHz)   |
+| Wireless Transmit Power            | 25 dBm                 |
+| Wireless System Gain               | -45 dB                 |
+| Wireless Receiver Sensitivity      | -95 dBm                |
+| WiTracing Resolution               | 16,384 Pixel (128x128) |
+| Maximum WiTracing Sample Per Pixel | 1                      |
+| Maximum WiTracing Bounces          | 3                      |
+
+#### Positioning Application
+
+To clone the repository
+
+```shell
+git clone https://github.com/codelzz/WirelessDTApp.git
+```
+
+The application has been test on iPhone 12 Pro Max with iOS 16.1
+
 
 
 ## Troubles Shooting
