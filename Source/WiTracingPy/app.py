@@ -31,8 +31,8 @@ if __name__ == "__main__":
         data = json.loads(byte_data.decode('utf-8'))
         data = {k.lower(): v for k, v in data.items()} # convert to lower
         # ['txname','rxname','coordinates','rssi','timestamp']
-        preprocessor.enqueue(data)
         # print(data)
+        preprocessor.enqueue(data)
         # predictor.enqueue(data)
 
     preprocessor = Preprocessor(wait_time=0.01)
