@@ -1,13 +1,16 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{F9EAE0BD-4967-EF27-71C7-11B24EBE517E}",
+	"EngineAssociation": "{CDC7B4A3-41CC-B929-B1FA-F5BB712D5C74}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
 		{
 			"Name": "WiTracingSim",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [
