@@ -2,7 +2,7 @@
 
 WirelessDT, is a **Wireless** **D**igital **T**win Platform, for Wireless Software Applications (WSAs) Evaluation.
 
-In this [DEMO Video](https://youtu.be/9Kl-3jgMBUA), we evaluate a wireless indoor localisation mobile application with two typical prediction algorithms: 1) Kalman Filter-based Trilateration and 2) Deep Recurrent Neural Network, as a case study to demonstrate the capabilities of WirelessDT. 
+In this [ICSE2023 DEMO Video](https://youtu.be/9Kl-3jgMBUA), we evaluate a wireless indoor localisation mobile application with two typical prediction algorithms: 1) Kalman Filter-based Trilateration and 2) Deep Recurrent Neural Network, as a case study to demonstrate the capabilities of WirelessDT. 
 
 ## Abstract
 
