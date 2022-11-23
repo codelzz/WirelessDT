@@ -34,8 +34,8 @@ git clone https://github.com/codelzz/WirelessDT.git
 
 After the project is cloned, we need to compile the project. 
 
-1. `right click` the `.uproject`, then select  `Switch Unreal Engine Version...`, and choose the one with `Source build ....`. This will associate `WirelessDT` with `WiTracing Unreal Engine`. 
-2. `right click` the `.uproject`  again and select `Generate Visual Studio project file`. The solution file end with `.sln` should appear.
+1. Right click the `.uproject`, then select  `Switch Unreal Engine Version...`, and choose the one with `Source build ....`. This will associate `WirelessDT` with `WiTracing Unreal Engine`. 
+2. Right click the `.uproject`  again and select `Generate Visual Studio project file`. The solution file end with `.sln` should appear.
 3. Open the `.sln` file and compile the project.
 
 ### STEP3: Run the Digital Twin Platform
