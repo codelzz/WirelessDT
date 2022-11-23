@@ -72,7 +72,7 @@ The path of the target AI carrying the wireless receiver can be adjusted by chan
 
 Besides the above settings, we open-source our project and provide total freedom for other researchers or developers to customize their virtual environment with UE Editor.
 
-## Extra Setup for DEMO reproduction.
+## Extra Setup for DEMO Reproduction.
 
 The physical twin hardware and the localization application are required to reproduce the demo.
 
