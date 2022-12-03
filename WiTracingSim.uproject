@@ -29,6 +29,10 @@
 		{
 			"Name": "VictoryBPLibrary",
 			"Enabled": true
+		},
+		{
+			"Name": "RigLogic",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
