@@ -1,7 +1,7 @@
 NETWORK_CONFIG = {
     "max_buffer_size": 65507,
-    "server_endpoint": ("127.0.0.1", 8888),
-    "client_endpoint": ("127.0.0.1", 8080),
+    # "server_endpoint": ("192.168.31.110", 8888),
+    "client_endpoint": ("192.168.31.110", 8888),
 }
 
 APP_CONFIG = {
