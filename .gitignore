@@ -846,6 +846,7 @@ FodyWeavers.xsd
 
 *.ipch
 
+# ignored files on cityperson branch (Yu)
 IMU_data/
 
 Camera_Images/
