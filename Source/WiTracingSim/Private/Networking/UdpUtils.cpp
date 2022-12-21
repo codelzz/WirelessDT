@@ -29,3 +29,10 @@ TSharedPtr<TArray<uint8>, ESPMode::ThreadSafe> FUdpUtils::StringToBytesSharedPtr
 	}
 	return Bytes;
 }
+
+FIPv4Endpoint FUdpUtils::ParseEndpoint(const FString Host, const uint16 Port)
+{
+	FIPv4Address IPAddress;
+	FIPv4Address::Parse(Host, IPAddress);
+	return FIPv4Endpoint(IPAddress, Port);
+}
