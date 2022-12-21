@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{55C3A76B-4C70-0812-D4D9-A0A6C1E3A5DF}",
+	"EngineAssociation": "{B1DA1754-4015-CCEC-1285-078B76EC5FB7}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -28,6 +28,14 @@
 		},
 		{
 			"Name": "VictoryBPLibrary",
+			"Enabled": true
+		},
+		{
+			"Name": "RigLogic",
+			"Enabled": true
+		},
+		{
+			"Name": "MLAdapter",
 			"Enabled": true
 		}
 	],
