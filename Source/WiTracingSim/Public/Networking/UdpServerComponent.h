@@ -15,6 +15,11 @@ public:
 	virtual void OnUdpServerDataRecv(FString RecvData, FString& RespData) = 0;
 };
 
+class FUdpServerRLAgentDelegate {
+public:
+	virtual void OnUdpServerRLAgentDataRecv(FString RecvData, FString& RespData) = 0;
+};
+
 //--- CLASS: FUdpServer -----------------------------------------------------------------------
 class FUdpServer {
 public:
@@ -39,6 +44,7 @@ protected:
 
 public:
 	FUdpServerDelegate* Delegate = nullptr;
+	FUdpServerRLAgentDelegate* RLDelegate = nullptr;
 };
 
 //--- CLASS: FUdpServerComponentDelegate ---------------------------------------------------------------
@@ -48,10 +54,17 @@ public:
 	virtual void OnUdpServerComponentDataRecv(FString RecvData, FString& RespData) = 0;
 };
 
+//--- CLASS: FUdpServerComponentRLAgentDelegate ---------------------------------------------------------------
+
+class FUdpServerComponentRLAgentDelegate {
+public:
+	virtual void OnUdpServerComponentRLAgentDataRecv(FString RecvData, FString& RespData) = 0;
+};
+
 //--- CLASS: UUdpServerComponent -----------------------------------------------------------------------
 
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
-class UUdpServerComponent : public USceneComponent, public FUdpServerDelegate
+class UUdpServerComponent : public USceneComponent, public FUdpServerDelegate, public FUdpServerRLAgentDelegate
 {
 	GENERATED_UCLASS_BODY()
 
@@ -76,10 +89,12 @@ public:
 
 public:
 	virtual void OnUdpServerDataRecv(FString RecvData, FString& RespData) override;
+	virtual void OnUdpServerRLAgentDataRecv(FString RecvData, FString& RespData) override;
 
 private:
 	TSharedPtr<class FUdpServer> UdpServer;
 
 public:
 	FUdpServerComponentDelegate* Delegate = nullptr;
+	FUdpServerComponentRLAgentDelegate* RLDelegate = nullptr;
 };

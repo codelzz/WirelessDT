@@ -5,6 +5,7 @@
 FUdpServer::FUdpServer(const FString Host, const uint16 Port)
 	: SocketSubSystem(ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM))
 	, Delegate(nullptr)
+	, RLDelegate(nullptr)
 {
 	FIPv4Address IPAddress;
 	FIPv4Address::Parse(Host, IPAddress);
@@ -59,6 +60,17 @@ void FUdpServer::OnDataRecv(const FArrayReaderPtr& ReaderPtr, const FIPv4Endpoin
 {
 	FString RecvData = *FUdpUtils::ArrayReaderPtrToString(ReaderPtr);
 	int32 Index;
+
+	if (RLDelegate)
+	{
+		FString RespData;
+		RLDelegate->OnUdpServerRLAgentDataRecv(RecvData, RespData);
+		if (!RespData.IsEmpty()) {
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *RespData);
+			Send(RespData, InEndpoint);
+		}
+	}
+
 	if (RecvData.FindChar(TEXT('}'), Index))
 	{
 		if (Delegate)
@@ -92,6 +104,7 @@ bool FUdpServer::Send(const TSharedRef<TArray<uint8>, ESPMode::ThreadSafe>& Data
 UUdpServerComponent::UUdpServerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, Delegate(nullptr)
+	, RLDelegate(nullptr)
 {
 }
 
@@ -117,6 +130,7 @@ void UUdpServerComponent::Listen()
 {
 	UdpServer = MakeShared<FUdpServer>(Host, Port);
 	UdpServer->Delegate = this;
+	UdpServer->RLDelegate = this;
 	if (IsValid())
 	{
 		UdpServer->Listen();
@@ -144,5 +158,14 @@ void UUdpServerComponent::OnUdpServerDataRecv(FString RecvData, FString& RespDat
 	if (Delegate)
 	{
 		Delegate->OnUdpServerComponentDataRecv(RecvData, RespData);
+	}
+}
+
+void UUdpServerComponent::OnUdpServerRLAgentDataRecv(FString RecvData, FString& RespData)
+{
+	// deliver the callback to higher layer
+	if (RLDelegate)
+	{
+		RLDelegate->OnUdpServerComponentRLAgentDataRecv(RecvData, RespData);
 	}
 }
