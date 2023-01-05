@@ -60,14 +60,16 @@ void FUdpServer::OnDataRecv(const FArrayReaderPtr& ReaderPtr, const FIPv4Endpoin
 {
 	FString RecvData = *FUdpUtils::ArrayReaderPtrToString(ReaderPtr);
 	int32 Index;
-
-	if (RLDelegate)
-	{
-		FString RespData;
-		RLDelegate->OnUdpServerRLAgentDataRecv(RecvData, RespData);
-		if (!RespData.IsEmpty()) {
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *RespData);
-			Send(RespData, InEndpoint);
+	if (RecvData.FindChar(TEXT('}'), Index)){
+		if (RLDelegate)
+		{
+			RecvData = RecvData.Mid(0, Index + 1);
+			FString RespData;
+			RLDelegate->OnUdpServerRLAgentDataRecv(RecvData, RespData);
+			if (!RespData.IsEmpty()) {
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *RespData);
+				Send(RespData, InEndpoint);
+			}
 		}
 	}
 
