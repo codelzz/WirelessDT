@@ -8,13 +8,11 @@
 
 AWiTracingAgent::AWiTracingAgent()
 {
-	// PrimaryActorTick.bCanEverTick = true;
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 
-	UdpClientComponent = CreateDefaultSubobject<UUdpClientComponent>(TEXT("UdpSocketServerComponent0"));
+	UdpClientComponent = CreateDefaultSubobject<UUdpClientComponent>(TEXT("UdpServerComponent0"));
 	UdpClientComponent = CastChecked<UUdpClientComponent>(GetUdpClientComponent());
-
 	UdpClientComponent->SetupAttachment(Root);
 }
 
@@ -23,7 +21,6 @@ void AWiTracingAgent::BeginPlay()
 	Super::BeginPlay();
 
 	InitRenderTargets();
-	CachePlayerController();
 	CacheTXs();
 }
 
@@ -34,34 +31,29 @@ void AWiTracingAgent::Tick(float DeltaTime)
 
 void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result, bool OctahedralProjection, bool bDenoised, bool bVisualized)
 {
-	if (WirelessTX && WirelessRX)
-	{
-		UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
-		if (bVisualized) {
-			RenderTarget = TextureRenderTargetVis;
-		}
-		UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), RenderTarget, WirelessTX, WirelessRX, Result, OctahedralProjection, bDenoised, bVisualized);
+	if (WirelessTX == nullptr || WirelessRX == nullptr) {
+		// skip if Wireless Transmitter or Wireless Receiver not exist
+		return;
 	}
+	UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTX, WirelessRX, Result, OctahedralProjection, bDenoised, bVisualized);
 }
 
 void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection, bool bDenoised, bool bVisualized)
 {
-	if (WirelessTXs.Num() > 0 && WirelessRX)
-	{
-		UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
-		if (bVisualized) {
-			RenderTarget = TextureRenderTargetVis;
-		}
-		UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), RenderTarget, WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised, bVisualized);
+	if (WirelessTXs.Num() < 1 || WirelessRX == nullptr) {
+		// skip if Wireless Transmitter or Wireless Receiver not exist
+		return;
 	}
+	UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised, bVisualized);
 }
 
 void AWiTracingAgent::PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection, bool bDenoised) {
-	if (WirelessTXs.Num() > 0 && WirelessRX)
-	{
-		UTextureRenderTarget2D* RenderTarget = TextureRenderTargetVis;
-		UWiTracingRendererBlueprintLibrary::PreviewWiTracing(GetWorld(), RenderTarget, WirelessTXs, WirelessRX, OctahedralProjection, bDenoised, true);
+
+	if (WirelessTXs.Num() < 1 || WirelessRX == nullptr) {
+		// skip if Wireless Transmitter or Wireless Receiver not exist
+		return;
 	}
+	UWiTracingRendererBlueprintLibrary::PreviewWiTracing(GetWorld(), TextureRenderTargetVis, WirelessTXs, WirelessRX, OctahedralProjection, bDenoised, true);
 }
 
 void AWiTracingAgent::UDPSendWiTracingResult(FWiTracingResult Result)
@@ -76,6 +68,14 @@ void AWiTracingAgent::UDPSendWiTracingResult(FWiTracingResult Result)
 	}
 }
 
+UTextureRenderTarget2D* AWiTracingAgent::GetRenderTarget(bool bVisualized) {
+	UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
+	if (bVisualized) {
+		RenderTarget = TextureRenderTargetVis;
+	}
+	return RenderTarget;
+}
+
 TArray<AWirelessTX*> AWiTracingAgent::GetTXsInRange(FVector Origin, float Radius) {
 	TArray<AWirelessTX*> InRangeTXs;
 	InRangeTXs.Empty();
@@ -88,7 +88,6 @@ TArray<AWirelessTX*> AWiTracingAgent::GetTXsInRange(FVector Origin, float Radius
 	return InRangeTXs;
 }
 
-
 TArray<AWirelessTX*> AWiTracingAgent::GetTXsOutRange(FVector Origin, float Radius) {
 	TArray<AWirelessTX*> InRangeTXs;
 	InRangeTXs.Empty();
@@ -99,125 +98,6 @@ TArray<AWirelessTX*> AWiTracingAgent::GetTXsOutRange(FVector Origin, float Radiu
 		}
 	}
 	return InRangeTXs;
-}
-
-int64 AWiTracingAgent::RSSISampling(TArray<float> RSSIPdf)
-{
-	// We based the fact that stronger signal has better reception rate
-	// hence it is more likely to be detected by sensor
-	// So, we apply a pdf according this fact to the origin RSSIPdf
-	// According to the related work experiment this effect will 
-	// act as a grey area. However this grey area only happen on around -87 dBm
-	// with as small window which already be consider in wi tracing shadering process
-
-	// The array store the not zero value index from RSSIPdf 
-	TArray<int64> RSSIIndices;
-	TArray<float> RSSIIndicesPdf;
-	for (int Index = 0; Index < RSSIPdf.Num(); Index++)
-	{
-		const float Pdf = RSSIPdf[Index];
-		if (Pdf > 0)
-		{
-			RSSIIndices.Emplace(Index);
-			RSSIIndicesPdf.Emplace(Pdf);
-		}
-	}
-	// Step 1: Sample on non-zero probability indices
-	if (RSSIIndices.Num() > 0)
-	{
-		// construct Indices CDF
-		TArray<float> RSSIIndicesCDF;
-		RSSIIndicesCDF.Empty(RSSIIndices.Num());
-		float PdfSum = 0.0f;
-		// Calculate CDF
-		for (auto Pdf : RSSIIndicesPdf)
-		{
-			PdfSum += Pdf;
-			RSSIIndicesCDF.Emplace(PdfSum);
-		}
-
-		// Step 2: Binary Search for Index of RSSIIndices
-		int Index = 0;
-		for (int Count = RSSIIndicesCDF.Num(); Count > 0;)
-		{
-			int Step = Count / 2;
-			int Iterator = Index + Step;
-			float RandNum = FMath::RandRange(0.0f, 1.0f);
-			if (RandNum < RSSIIndicesCDF[Iterator])
-			{
-				Count = Step;
-			}
-			else
-			{
-				Index = Iterator + 1;
-				Count -= Step + 1;
-			}
-		}
-
-		// Step 3: Convert to RSSI reading
-		return -RSSIIndices[Index];
-	} 
-	return RSSI_MIN;
-}
-
-int64 AWiTracingAgent::RSSIMultiSampling(TArray<float> RSSIPdf, int64 n)
-{
-	TArray<int32> Samples;
-	Samples.Empty(n);
-	for (int Index = 0; Index < n; Index++)
-	{
-		int32 Sample = RSSISampling(RSSIPdf);
-		if (Sample > RSSI_MIN)
-		{
-			Samples.Emplace(Sample);
-		}
-	}
-	if (Samples.Num() > 0)
-	{
-		int32 Max;
-		int32 Index;
-		UKismetMathLibrary::MaxOfIntArray(Samples, Index, Max);
-		return Max;
-	}
-	return 0;
-}
-
-int64 AWiTracingAgent::RSSIMaxSampling(TArray<float> RSSIPdf)
-{	
-	int64 RSSI = RSSI_MIN;
-	for (int32 Index = 0; Index < RSSIPdf.Num(); Index++)
-	{
-		if (RSSIPdf[Index] > 0.0f)
-		{
-			RSSI = -Index;
-			break;
-		}
-	}
-	return RSSI;
-}
-
-AWirelessTX* AWiTracingAgent::GetNextTX()
-{
-	// Method return the next TX from TX list
-	// The implementation may have protential issue if TXs list is dynamic
-	AWirelessTX* TX = nullptr;
-	const int32 TXNum = TXs.Num();
-	if (TXNum > 0)
-	{
-		const int32 Index = IterativeTXIndex % TXNum;
-		if (Index < TXNum)
-		{
-			TX = TXs[Index];
-		}
-		IterativeTXIndex++;
-		IterativeTXIndex %= TXNum;
-	}
-	return TX;
-}
-
-void AWiTracingAgent::CachePlayerController()
-{
-	PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 }
 
 void AWiTracingAgent::InitRenderTargets()
@@ -246,6 +126,127 @@ void AWiTracingAgent::CacheTXs()
 		}
 	}
 }
+
+// CachePlayerController();
+
+//void AWiTracingAgent::CachePlayerController()
+//{
+//	PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+//}
+
+//int64 AWiTracingAgent::RSSISampling(TArray<float> RSSIPdf)
+//{
+//	// We based the fact that stronger signal has better reception rate
+//	// hence it is more likely to be detected by sensor
+//	// So, we apply a pdf according this fact to the origin RSSIPdf
+//	// According to the related work experiment this effect will 
+//	// act as a grey area. However this grey area only happen on around -87 dBm
+//	// with as small window which already be consider in wi tracing shadering process
+//
+//	// The array store the not zero value index from RSSIPdf 
+//	TArray<int64> RSSIIndices;
+//	TArray<float> RSSIIndicesPdf;
+//	for (int Index = 0; Index < RSSIPdf.Num(); Index++)
+//	{
+//		const float Pdf = RSSIPdf[Index];
+//		if (Pdf > 0)
+//		{
+//			RSSIIndices.Emplace(Index);
+//			RSSIIndicesPdf.Emplace(Pdf);
+//		}
+//	}
+//	// Step 1: Sample on non-zero probability indices
+//	if (RSSIIndices.Num() > 0)
+//	{
+//		// construct Indices CDF
+//		TArray<float> RSSIIndicesCDF;
+//		RSSIIndicesCDF.Empty(RSSIIndices.Num());
+//		float PdfSum = 0.0f;
+//		// Calculate CDF
+//		for (auto Pdf : RSSIIndicesPdf)
+//		{
+//			PdfSum += Pdf;
+//			RSSIIndicesCDF.Emplace(PdfSum);
+//		}
+//
+//		// Step 2: Binary Search for Index of RSSIIndices
+//		int Index = 0;
+//		for (int Count = RSSIIndicesCDF.Num(); Count > 0;)
+//		{
+//			int Step = Count / 2;
+//			int Iterator = Index + Step;
+//			float RandNum = FMath::RandRange(0.0f, 1.0f);
+//			if (RandNum < RSSIIndicesCDF[Iterator])
+//			{
+//				Count = Step;
+//			}
+//			else
+//			{
+//				Index = Iterator + 1;
+//				Count -= Step + 1;
+//			}
+//		}
+//
+//		// Step 3: Convert to RSSI reading
+//		return -RSSIIndices[Index];
+//	}
+//	return RSSI_MIN;
+//}
+//
+//int64 AWiTracingAgent::RSSIMultiSampling(TArray<float> RSSIPdf, int64 n)
+//{
+//	TArray<int32> Samples;
+//	Samples.Empty(n);
+//	for (int Index = 0; Index < n; Index++)
+//	{
+//		int32 Sample = RSSISampling(RSSIPdf);
+//		if (Sample > RSSI_MIN)
+//		{
+//			Samples.Emplace(Sample);
+//		}
+//	}
+//	if (Samples.Num() > 0)
+//	{
+//		int32 Max;
+//		int32 Index;
+//		UKismetMathLibrary::MaxOfIntArray(Samples, Index, Max);
+//		return Max;
+//	}
+//	return 0;
+//}
+//
+//int64 AWiTracingAgent::RSSIMaxSampling(TArray<float> RSSIPdf)
+//{
+//	int64 RSSI = RSSI_MIN;
+//	for (int32 Index = 0; Index < RSSIPdf.Num(); Index++)
+//	{
+//		if (RSSIPdf[Index] > 0.0f)
+//		{
+//			RSSI = -Index;
+//			break;
+//		}
+//	}
+//	return RSSI;
+//}
+
+//AWirelessTX* AWiTracingAgent::GetNextTX()
+//{
+//	// Method return the next TX from TX list
+//	// The implementation may have protential issue if TXs list is dynamic
+//	AWirelessTX* TX = nullptr;
+//	const int32 TXNum = TXs.Num();
+//	if (TXNum > 0)
+//	{
+//		const int32 Index = IterativeTXIndex % TXNum;
+//		if (Index < TXNum)
+//		{
+//			TX = TXs[Index];
+//		}
+//		IterativeTXIndex++;
+//		IterativeTXIndex %= TXNum;
+//	}
+//	return TX;
+//}
 
 //void AWiTracingAgent::GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized)
 //{

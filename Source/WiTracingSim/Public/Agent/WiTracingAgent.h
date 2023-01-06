@@ -65,74 +65,106 @@ public:
 	 * @param bVisualized - let function known whether the intermediate result (store in TextureRenderTarget) will be used for visualziation.
 	 * @return Result - the result of WiTracing
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result, bool OctahedralProjection = true, bool bDenoised = false, bool bVisualized = false);
 
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	/**
+	 * Perform WiTracing for multiple TX-RX pairs.
+	 * @param WirelessTX - the wireless transmitters
+	 * @param WirelessRX - the wireless receiver
+	 * @param OctahedralProjection - control the projection approach (default: true, enable octahedral projection, otherwise use normal projection)
+	 * @param bDenoised - control whether use the built-in DNN denoiser (default: true)
+	 * @param bVisualized - let function known whether the intermediate result (store in TextureRenderTarget) will be used for visualziation.
+	 * @return Result - the result of WiTracing
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	void MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection = true, bool bDenoised = false, bool bVisualized = false);
 
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	/**
+	 * Perform WiTracing for multiple TX-RX pair for visualization purpose.
+	 * @param WirelessTX - the wireless transmitters
+	 * @param WirelessRX - the wireless receiver
+	 * @param OctahedralProjection - control the projection approach (default: true, enable octahedral projection, otherwise use normal projection)
+	 * @param bDenoised - control whether use the built-in DNN denoiser (default: true)
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	void PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection = true, bool bDenoised = false);
 
-	// Send Result to UDP Client
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	/**
+	 * Send Result via UDP Client
+	 * @param Result - the WiTracing result
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	void UDPSendWiTracingResult(FWiTracingResult Result);
 
 	/**
-	 * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample
-	 * Instead of average over n signal period, we do n time sampling then find the maximum value
-	 * as our sample.
+	 * get all transmitter in current world
+	 * @return - all transmitter in current world
 	 */
-	/*UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-		int64 RSSISampling(TArray<float>& RSSIPdf, int64 n);*/
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-		int64 RSSISampling(TArray<float> RSSIPdf);
-
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-		int64 RSSIMultiSampling(TArray<float> RSSIPdf, int64 n=8);
-
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-		int64 RSSIMaxSampling(TArray<float> RSSIPdf);
-	/**
-	 * Get the TX will be traced in next iterative witracing 
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-		AWirelessTX* GetNextTX(); 
-	
-	/// Get TXs
-	/// =======================
-	/// Get all transmitters
-	///	- returns: all transmitter in current world
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 		TArray<AWirelessTX*> GetTXs() { return TXs; };
 
-	/// Get TXs within range
-	/// =======================
-	/// Get all transmitters within range
-	///	- returns: transmitter in range
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	/**
+	 * get all transmitter in current world within given range
+	 * @param Origin - the center of range
+	 * @param Radius - the radius of the range
+	 * @return - all transmitter in current world within range
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 		TArray<AWirelessTX*> GetTXsInRange(FVector Origin, float Radius);
 
-	/// Get TXs out of range
-	/// =======================
-	/// Get all transmitters within range
-	///	- returns: transmitter outside the range
-	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	/**
+	 * get all transmitter in current world outside given range
+	 * @param Origin - the center of range
+	 * @param Radius - the radius of the range
+	 * @return - all transmitter in current world outside the range
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 		TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
 
 private:
-	// Is this really necessary?
+	/** initialize render target for saving WiTracing result */
+	void InitRenderTargets();
+
+	/** cache all the transmitters in the world */
+	void CacheTXs();
+
+	/** get render target for caching WiTracing result */
+	UTextureRenderTarget2D* GetRenderTarget(bool bVisualized = false);
+
+	/**
+	 * get udp client
+	 * @return the udp client component
+	 */
 	class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
 
 private:
-	APlayerController* PlayerController;
-
-private:
-	void InitRenderTargets();
-	void CachePlayerController();
-	void CacheTXs();
-
+	/** transmitters in current world */
 	TArray<AWirelessTX*> TXs;
-	int32 IterativeTXIndex = 0;
-	const int64 RSSI_MIN = -255;
 };
+
+// 	APlayerController* PlayerController;
+// 	void CachePlayerController();
+// 	int32 IterativeTXIndex = 0;
+
+/**
+ * Get the TX will be traced in next iterative witracing
+ */
+//UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+//AWirelessTX* GetNextTX();
+
+/**
+ * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample
+ * Instead of average over n signal period, we do n time sampling then find the maximum value
+ * as our sample.
+ */
+ /*UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	 int64 RSSISampling(TArray<float>& RSSIPdf, int64 n);*/
+	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	 //	int64 RSSISampling(TArray<float> RSSIPdf);
+
+	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	 //	int64 RSSIMultiSampling(TArray<float> RSSIPdf, int64 n=8);
+
+	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
+	 //	int64 RSSIMaxSampling(TArray<float> RSSIPdf);
