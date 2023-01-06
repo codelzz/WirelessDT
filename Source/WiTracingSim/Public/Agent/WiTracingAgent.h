@@ -6,7 +6,7 @@
 #include "WiTracing/Devices/WirelessTX.h"
 #include "WiTracing/Devices/WirelessRX.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
-#include "Networking/UdpSocketServerComponent.h"
+#include "Networking/UdpClientComponent.h"
 #include "WiTracingAgent.generated.h"
 
 
@@ -37,7 +37,13 @@ public:
 	UTextureRenderTarget2D* TextureRenderTargetTemp;	// Texture for temporal used
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Wi Tracing", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UUdpSocketServerComponent> UdpSocketServerComponent;
+	TObjectPtr<class UUdpClientComponent> UdpClientComponent;
+
+public:
+	UPROPERTY(EditAnywhere, category = "Endpint")
+		FString Host = TEXT("127.0.0.1");
+	UPROPERTY(EditAnywhere, category = "Endpint")
+		uint16 Port = 8888;
 
 	/* [ISSUE] Performance Issue
 	 * As we need to isolate the impact from different TX in the scene, at each iteration we only do WiTracing
@@ -107,7 +113,7 @@ public:
 
 private:
 	// Is this really necessary?
-	class UUdpSocketServerComponent* GetUdpSocketServerComponent() const { return UdpSocketServerComponent; }
+	class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
 
 private:
 	APlayerController* PlayerController;
