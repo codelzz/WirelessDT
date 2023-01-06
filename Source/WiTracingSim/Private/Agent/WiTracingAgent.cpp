@@ -12,10 +12,10 @@ AWiTracingAgent::AWiTracingAgent()
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 
-	UdpSocketServerComponent = CreateDefaultSubobject<UUdpSocketServerComponent>(TEXT("UdpSocketServerComponent0"));
-	UdpSocketServerComponent = CastChecked<UUdpSocketServerComponent>(GetUdpSocketServerComponent());
+	UdpClientComponent = CreateDefaultSubobject<UUdpClientComponent>(TEXT("UdpSocketServerComponent0"));
+	UdpClientComponent = CastChecked<UUdpClientComponent>(GetUdpClientComponent());
 
-	UdpSocketServerComponent->SetupAttachment(Root);
+	UdpClientComponent->SetupAttachment(Root);
 }
 
 void AWiTracingAgent::BeginPlay()
@@ -66,12 +66,12 @@ void AWiTracingAgent::PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirele
 
 void AWiTracingAgent::UDPSendWiTracingResult(FWiTracingResult Result)
 {
-	if (UdpSocketServerComponent)
+	if (UdpClientComponent)
 	{
 		FString JsonData;
 		if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
 		{
-			UdpSocketServerComponent->Send(JsonData);
+			UdpClientComponent->Send(JsonData, Host, Port);
 		}
 	}
 }
