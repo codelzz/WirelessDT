@@ -11,10 +11,12 @@
 
 
 /**
- *  AWiTracingAgent is a management agent to control the wi tracing process in the scene.
+ *  AWiTracingAgent is a management agent to control the WiTracing process in the scene.
  *  After BeginPlay(), it will iterative do wi tracing for each transmitter in the scene.
  *  The render result will be hold in texture render target for preview or debugging.
  */
+
+/** A agent to manage WiTracing process */
 UCLASS()
 class AWiTracingAgent: public AActor
 {
@@ -22,40 +24,47 @@ class AWiTracingAgent: public AActor
 
 public:
 	AWiTracingAgent();
-
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaScends) override;
 
 public:
-	// UPROPERTY Object can be seen in blueprint detial tab
-	// USceneComponent define the transform information including location, scale and rotation
+	// AWiTracingAgent Properties ---
+
 	UPROPERTY()
 	USceneComponent* Root;
-	UPROPERTY(EditAnywhere, Category="Wi Tracing")
-	UTextureRenderTarget2D* TextureRenderTarget;		// Texture holding data required for calculation
-	UPROPERTY(EditAnywhere, Category="Wi Tracing")
-	UTextureRenderTarget2D* TextureRenderTargetTemp;	// Texture for temporal used
 
+	/** Udp client for communication */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Wi Tracing", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UUdpClientComponent> UdpClientComponent;
+		TObjectPtr<class UUdpClientComponent> UdpClientComponent;
 
-public:
+	/** buffer holding data for WiTracing Raw data, compare to the one without Vis, it won't be rendered to the scene for visualization */
+	UPROPERTY(EditAnywhere, Category="WiTracing")
+	UTextureRenderTarget2D* TextureRenderTarget;
+
+	/** buffer holding data for WiTracing Raw data, intermediate WiTracing result will be stored here if result is use for visualization */
+	UPROPERTY(EditAnywhere, Category="WiTracing")
+	UTextureRenderTarget2D* TextureRenderTargetVis;
+
+	/** The host of target server indicate where the data is sent to */
 	UPROPERTY(EditAnywhere, category = "Endpint")
 		FString Host = TEXT("127.0.0.1");
+
+	/** The port of target server */
 	UPROPERTY(EditAnywhere, category = "Endpint")
 		uint16 Port = 8888;
 
-	/* [ISSUE] Performance Issue
-	 * As we need to isolate the impact from different TX in the scene, at each iteration we only do WiTracing
-	 * for one TX. This might signficantly affect the scalability of size of environment and limit the number
-	 * of TXs in the scene. This need to be solved in future version
-	 */
-	//UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	//void IterativeWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized = true);
-	
-	//UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	//void GlobalWiTracing(FTransform Transform, TArray<float>& RSSIPdf, bool bVisualized=true);
+public:
+	// AWiTracingAgent Blueprint Functions ---
 
+	/**
+	 * Perform WiTracing for single TX-RX pair.
+	 * @param WirelessTX - the wireless transmitter
+	 * @param WirelessRX - the wireless receiver
+	 * @param OctahedralProjection - control the projection approach (default: true, enable octahedral projection, otherwise use normal projection)
+	 * @param bDenoised - control whether use the built-in DNN denoiser (default: true)
+	 * @param bVisualized - let function known whether the intermediate result (store in TextureRenderTarget) will be used for visualziation.
+	 * @return Result - the result of WiTracing
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
 	void WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX, FWiTracingResult& Result, bool OctahedralProjection = true, bool bDenoised = false, bool bVisualized = false);
 

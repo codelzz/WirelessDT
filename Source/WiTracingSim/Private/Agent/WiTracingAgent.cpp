@@ -36,9 +36,9 @@ void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX
 {
 	if (WirelessTX && WirelessRX)
 	{
-		UTextureRenderTarget2D* RenderTarget = TextureRenderTargetTemp;
+		UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
 		if (bVisualized) {
-			RenderTarget = TextureRenderTarget;
+			RenderTarget = TextureRenderTargetVis;
 		}
 		UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), RenderTarget, WirelessTX, WirelessRX, Result, OctahedralProjection, bDenoised, bVisualized);
 	}
@@ -48,9 +48,9 @@ void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWireless
 {
 	if (WirelessTXs.Num() > 0 && WirelessRX)
 	{
-		UTextureRenderTarget2D* RenderTarget = TextureRenderTargetTemp;
+		UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
 		if (bVisualized) {
-			RenderTarget = TextureRenderTarget;
+			RenderTarget = TextureRenderTargetVis;
 		}
 		UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), RenderTarget, WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised, bVisualized);
 	}
@@ -59,7 +59,7 @@ void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWireless
 void AWiTracingAgent::PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection, bool bDenoised) {
 	if (WirelessTXs.Num() > 0 && WirelessRX)
 	{
-		UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
+		UTextureRenderTarget2D* RenderTarget = TextureRenderTargetVis;
 		UWiTracingRendererBlueprintLibrary::PreviewWiTracing(GetWorld(), RenderTarget, WirelessTXs, WirelessRX, OctahedralProjection, bDenoised, true);
 	}
 }
@@ -226,9 +226,9 @@ void AWiTracingAgent::InitRenderTargets()
 	{
 		UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), TextureRenderTarget, FLinearColor::Transparent);
 	}
-	if (TextureRenderTargetTemp)
+	if (TextureRenderTargetVis)
 	{
-		UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), TextureRenderTargetTemp, FLinearColor::Transparent);
+		UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), TextureRenderTargetVis, FLinearColor::Transparent);
 	}
 }
 
