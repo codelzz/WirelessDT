@@ -16,7 +16,6 @@ from utils import CSVProxy
 
 RSSI_MIN = -255
 
-
 if __name__ == "__main__":
     print("[INF] Begin.")
 
@@ -32,8 +31,7 @@ if __name__ == "__main__":
     csv_proxy = None
     client = None
     t265_proxy = None
-    # dura ble
-    ble_proxies = None
+    ble_proxy = None
 
     # CSV -----------------------------------
     csv_proxy = CSVProxy(wait_time=0.01)
@@ -44,7 +42,7 @@ if __name__ == "__main__":
         if bool(data):
             print(f"x: {data['x']:.2f} y: {data['y']:.2f} z: {data['z']:.2f} " +
                   f"pitch: {data['pitch']:.2f} yaw: {data['yaw']:.2f} roll: {data['roll']:.2f} " +
-                  f"address: {data['address']} rssi: {data['rssi']}")
+                  f"tx: {data['tx']} rssi: {data['rssi']}")
         # print(f"{address} << {repr(byte_data)}")
 
     def on_data_recv(byte_data, address):
@@ -63,13 +61,13 @@ if __name__ == "__main__":
                     'pitch':motion['pitch'],
                     'yaw':motion['yaw'],
                     'roll':motion['roll'],
-                    'address':"n/a",
+                    'tx':"n/a",
                     'rssi':RSSI_MIN,
                     }
             # if there is a present measurement from BLE
             instantaneity = abs(motion['timestamp'] - signal['timestamp'])
             if instantaneity < 20: # ms
-                data['address'] = signal['address']
+                data['tx'] = signal['tx']
                 data['rssi'] = signal['rssi']
         return data
 
@@ -78,22 +76,17 @@ if __name__ == "__main__":
         csv_proxy.enqueue_motion(data)
         client.sendjson(merge_data(motion=t265_proxy.payload, signal=ble_proxy.payload), SERVER_ENDPOINT)
     t265_proxy = T265Proxy(on_data_recv_fn=on_motion_recv)
-    
+
     # BLE ------------------------------------
     def on_signal_recv(data):
         csv_proxy.enqueue_signal(data)
         # client.sendjson(merge_data(motion=t265_proxy.payload, signal=ble_proxy.payload), SERVER_ENDPOINT)
-    
-    for port in BLE_PORT:
-        ble_proxies.append(BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv, address_filter=None)) 
+    ble_proxy = BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv, address_filter=None)
 
-    # ble_proxy = BLEProxy(port=BLE_PORT, baudrate=BLE_BAUDRATE, on_data_recv_fn=on_signal_recv, address_filter=ADDRESS_FILTER)
-   
     csv_proxy.start()
     client.start()
     t265_proxy.start()
-    for proxy in ble_proxies:
-        proxy.start()
+    ble_proxy.start()
 
     while True:
         try:
@@ -101,7 +94,5 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             break
 
-    # ble_proxy.release()
-    for proxy in ble_proxies:
-        proxy.release()
+    ble_proxy.release()
     print("[INF] Completed!")
