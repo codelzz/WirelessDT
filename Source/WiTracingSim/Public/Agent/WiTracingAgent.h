@@ -62,7 +62,6 @@ public:
 	 * @param WirelessRX - the wireless receiver
 	 * @param OctahedralProjection - control the projection approach (default: true, enable octahedral projection, otherwise use normal projection)
 	 * @param bDenoised - control whether use the built-in DNN denoiser (default: true)
-	 * @param bVisualized - let function known whether the intermediate result (store in TextureRenderTarget) will be used for visualziation.
 	 * @return Result - the result of WiTracing
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
