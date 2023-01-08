@@ -77,7 +77,18 @@ public:
 	 * @return Result - the result of WiTracing
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	void MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection = true, bool bDenoised = false, bool bVisualized = false);
+	void MultiTXWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection = true, bool bDenoised = false, bool bVisualized = false);
+
+	/**
+	 * Perform WiTracing for multiple TX-RX pairs.
+	 * @param WirelessTX - the wireless transmitters
+	 * @param WirelessRX - the wireless receivers
+	 * @param OctahedralProjection - control the projection approach (default: true, enable octahedral projection, otherwise use normal projection)
+	 * @param bDenoised - control whether use the built-in DNN denoiser (default: true)
+	 * @return Result - the result of WiTracing
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	void MultiWiTracing(TArray<AWirelessRX*> WirelessRXs, TArray<AWirelessTX*> WirelessTXs,  TArray<FWiTracingResult>& Results, bool OctahedralProjection = true, bool bDenoised = false);
 
 	/**
 	 * Perform WiTracing for multiple TX-RX pair for visualization purpose.
@@ -101,7 +112,14 @@ public:
 	 * @return - all transmitter in current world
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-		TArray<AWirelessTX*> GetTXs() { return TXs; };
+	const TArray<AWirelessTX*> GetTXs() { return TXs; };
+	
+	/**
+	 * get all receivers in current world
+	 * @return - all transmitter in current world
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	const TArray<AWirelessRX*> GetRXs() { return RXs; };
 
 	/**
 	 * get all transmitter in current world within given range
@@ -110,7 +128,7 @@ public:
 	 * @return - all transmitter in current world within range
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-		TArray<AWirelessTX*> GetTXsInRange(FVector Origin, float Radius);
+	const TArray<AWirelessTX*> GetTXsInRange(FVector Origin, float Radius);
 
 	/**
 	 * get all transmitter in current world outside given range
@@ -119,7 +137,7 @@ public:
 	 * @return - all transmitter in current world outside the range
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-		TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
+	const TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
 
 private:
 	/** initialize render target for saving WiTracing result */
@@ -127,6 +145,9 @@ private:
 
 	/** cache all the transmitters in the world */
 	void CacheTXs();
+
+	/** cache all the transmitters in the world */
+	void CacheRXs();
 
 	/** get render target for caching WiTracing result */
 	UTextureRenderTarget2D* GetRenderTarget(bool bVisualized = false);
@@ -140,6 +161,9 @@ private:
 private:
 	/** transmitters in current world */
 	TArray<AWirelessTX*> TXs;
+
+	/** receivers in current world */
+	TArray<AWirelessRX*> RXs;
 };
 
 // 	APlayerController* PlayerController;
