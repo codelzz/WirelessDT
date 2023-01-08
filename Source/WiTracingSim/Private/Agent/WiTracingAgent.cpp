@@ -22,6 +22,7 @@ void AWiTracingAgent::BeginPlay()
 
 	InitRenderTargets();
 	CacheTXs();
+	CacheRXs();
 }
 
 void AWiTracingAgent::Tick(float DeltaTime)
@@ -38,13 +39,22 @@ void AWiTracingAgent::WiTracing(AWirelessTX* WirelessTX, AWirelessRX* WirelessRX
 	UWiTracingRendererBlueprintLibrary::WiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTX, WirelessRX, Result, OctahedralProjection, bDenoised);
 }
 
-void AWiTracingAgent::MultiWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection, bool bDenoised, bool bVisualized)
+void AWiTracingAgent::MultiTXWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, TArray<FWiTracingResult>& Results, bool OctahedralProjection, bool bDenoised, bool bVisualized)
 {
 	if (WirelessTXs.Num() < 1 || WirelessRX == nullptr) {
 		// skip if Wireless Transmitter or Wireless Receiver not exist
 		return;
 	}
-	UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised);
+	UWiTracingRendererBlueprintLibrary::MultiTXWiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised);
+}
+
+void AWiTracingAgent::MultiWiTracing(TArray<AWirelessRX*> WirelessRXs, TArray<AWirelessTX*> WirelessTXs,  TArray<FWiTracingResult>& Results, bool OctahedralProjection, bool bDenoised)
+{
+	if (WirelessRXs.Num() < 1 || WirelessTXs.Num() < 1) {
+		// skip if Wireless Transmitter or Wireless Receiver not exist
+		return;
+	}
+	UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), GetRenderTarget(false), WirelessTXs, WirelessRXs, Results, OctahedralProjection, bDenoised);
 }
 
 void AWiTracingAgent::PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection, bool bDenoised) {
@@ -76,7 +86,7 @@ UTextureRenderTarget2D* AWiTracingAgent::GetRenderTarget(bool bVisualized) {
 	return RenderTarget;
 }
 
-TArray<AWirelessTX*> AWiTracingAgent::GetTXsInRange(FVector Origin, float Radius) {
+const TArray<AWirelessTX*> AWiTracingAgent::GetTXsInRange(FVector Origin, float Radius) {
 	TArray<AWirelessTX*> InRangeTXs;
 	InRangeTXs.Empty();
 	for (AWirelessTX* TX : TXs)
@@ -88,7 +98,7 @@ TArray<AWirelessTX*> AWiTracingAgent::GetTXsInRange(FVector Origin, float Radius
 	return InRangeTXs;
 }
 
-TArray<AWirelessTX*> AWiTracingAgent::GetTXsOutRange(FVector Origin, float Radius) {
+const TArray<AWirelessTX*> AWiTracingAgent::GetTXsOutRange(FVector Origin, float Radius) {
 	TArray<AWirelessTX*> InRangeTXs;
 	InRangeTXs.Empty();
 	for (AWirelessTX* TX : TXs)
@@ -123,6 +133,21 @@ void AWiTracingAgent::CacheTXs()
 		for (AActor* Actor : Actors)
 		{
 			TXs.Add(static_cast<AWirelessTX*>(Actor));
+		}
+	}
+}
+
+void AWiTracingAgent::CacheRXs()
+{
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		TArray<AActor*> Actors;
+		UGameplayStatics::GetAllActorsOfClass(World, AWirelessRX::StaticClass(), Actors);
+		RXs.Empty();
+		for (AActor* Actor : Actors)
+		{
+			RXs.Add(static_cast<AWirelessRX*>(Actor));
 		}
 	}
 }
