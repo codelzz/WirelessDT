@@ -45,7 +45,7 @@ void AWiTracingAgent::MultiTXWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirele
 		// skip if Wireless Transmitter or Wireless Receiver not exist
 		return;
 	}
-	UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised);
+	UWiTracingRendererBlueprintLibrary::MultiTXWiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised);
 }
 
 void AWiTracingAgent::MultiWiTracing(TArray<AWirelessRX*> WirelessRXs, TArray<AWirelessTX*> WirelessTXs,  TArray<FWiTracingResult>& Results, bool OctahedralProjection, bool bDenoised)
@@ -54,8 +54,7 @@ void AWiTracingAgent::MultiWiTracing(TArray<AWirelessRX*> WirelessRXs, TArray<AW
 		// skip if Wireless Transmitter or Wireless Receiver not exist
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("MultiWiTracing for %d RX and %d TX, "), WirelessRXs.Num(), WirelessTXs.Num());
-	// UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), GetRenderTarget(bVisualized), WirelessTXs, WirelessRX, Results, OctahedralProjection, bDenoised);
+	UWiTracingRendererBlueprintLibrary::MultiWiTracing(GetWorld(), GetRenderTarget(false), WirelessTXs, WirelessRXs, Results, OctahedralProjection, bDenoised);
 }
 
 void AWiTracingAgent::PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection, bool bDenoised) {
