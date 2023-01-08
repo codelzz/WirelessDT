@@ -60,6 +60,6 @@ class BLEProxy(Runnable):
     def update_payload(self, data):
         self.payload = {
             'timestamp':utils.millisecond(),
-            'address':data[0],
+            'tx':data[0],
             'rssi':data[1],
         }
