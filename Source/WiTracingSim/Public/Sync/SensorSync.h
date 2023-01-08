@@ -33,7 +33,7 @@ public:
 
 	FVector GetLocation()
 	{
-		return FVector(x + BaseLocation.X, y + BaseLocation.Y, z + BaseLocation.Z);
+		return FVector(x * 100.0f + BaseLocation.X, y * 100.0f + BaseLocation.Y, z * 100.0f + BaseLocation.Z);
 	}
 
 	FRotator GetRotator()
