@@ -6,7 +6,7 @@ import queue
 import csv
 import argparse
 
-from thread.runnable import Runnable
+from udpthread.runnable import Runnable
 
 # BLE proxy
 BAUDRATE = 96000

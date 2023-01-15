@@ -4,7 +4,7 @@ import time
 import settings
 import os
 
-from thread.runnable import Runnable
+from udpthread.runnable import Runnable
 
 CSV_FILE = settings.APP_CONFIG['preprocessed_csv_file']
 RSSI_MAX = settings.UNREAL_CONFIG['rssi_max']

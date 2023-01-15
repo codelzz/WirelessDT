@@ -7,7 +7,7 @@ import time
 import queue
 import json
 
-from thread.runnable import Runnable
+from udpthread.runnable import Runnable
 
 class UdpSocketRunnable(Runnable):
     # value based on Unreal source code UdpSocketReceiver.h [1].

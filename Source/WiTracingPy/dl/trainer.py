@@ -7,6 +7,6 @@ import numpy as np
 import tensorflow as tf
 
 import settings
-from thread.runnable import Runnable
+from udpthread.runnable import Runnable
 from preprocessing.dataset import DatasetGenerator
 from nn.deepAR import create_model

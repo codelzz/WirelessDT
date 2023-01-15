@@ -4,13 +4,13 @@ Reference:
 """
 import queue
 
-from thread.runnable import Runnable
+from udpthread.runnable import Runnable
 
 # convert endpoint to string format
 def endpoint_to_string(endpoint):
     return f"{endpoint[0]}:{endpoint[1]}"
 
-# inherit from thread runnable and add socket specified members
+# inherit from udpthread runnable and add socket specified members
 class UdpSocketRunnable(Runnable):
     max_buffer_size = 65507  # value based on Unreal source code UdpSocketReceiver.h [1].
 

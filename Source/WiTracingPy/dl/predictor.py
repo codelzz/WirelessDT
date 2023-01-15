@@ -13,7 +13,7 @@ for device in physical_devices:
     tf.config.experimental.set_memory_growth(device, True)
 
 import settings
-from thread.runnable import Runnable 
+from udpthread.runnable import Runnable
 from nn.deepar import create_model
 
 # Historical csv file contains data that used for model training
