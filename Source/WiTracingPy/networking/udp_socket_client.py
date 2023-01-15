@@ -7,8 +7,6 @@ from networking.udp import UdpSocketReceiver, UdpSocketSender
 import json
 import random
 
-import gymnasium as gym
-
 class UdpSocketClient:
 
     def __init__(self, endpoint, on_data_sent, on_data_recv, wait_time=0.001):
@@ -51,18 +49,27 @@ if __name__ == "__main__":
     forward_message = {"move_forward": True,
                        "turn_left": False,
                        "turn_right": False,
+                       "reset": False,
                        }
     turnright_message = {"move_forward": False,
                          "turn_left": False,
                          "turn_right": True,
+                         "reset": False,
                          }
     turnleft_message = {"move_forward": False,
                         "turn_left": True,
                         "turn_right": False,
+                        "reset": False,
                         }
     stop_message = {"move_forward": False,
                     "turn_left": False,
                     "turn_right": False,
+                    "reset": False,
+                    }
+    reset_message = {"move_forward": False,
+                    "turn_left": False,
+                    "turn_right": False,
+                    "reset": True,
                     }
 
     action_list = [forward_message, turnright_message, turnleft_message, stop_message]
