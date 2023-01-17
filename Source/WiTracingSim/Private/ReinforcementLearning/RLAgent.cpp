@@ -21,6 +21,10 @@ ARLAgent::ARLAgent()
 	UdpServerComponent->Port = 9001;
 	UdpServerComponent->RLDelegate = this;
 
+	UdpClientComponent = CreateDefaultSubobject<UUdpClientComponent>(TEXT("UdpServerComponent1"));
+	UdpClientComponent = CastChecked<UUdpClientComponent>(GetUdpClientComponent());
+	UdpClientComponent->SetupAttachment(Root);
+
 }
 
 // Called when the game starts or when spawned
@@ -35,43 +39,58 @@ void ARLAgent::BeginPlay()
 void ARLAgent::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	// AgentData.BaseLocation = this->GetActorLocation();
-	if (AgentData.move_forward && !Forwardkeep)
+	if (bActionReceived)
 	{
-		Forward = true;
-		Turnright = false;
-		Turnleft = false;
-		Forwardkeep = true;
-	}
-	else
-	{
-		Forward = false;
-	}
+		bActionReceived = false;
+		// AgentData.BaseLocation = this->GetActorLocation();
+		if (AgentData.reset)
+		{
+			Reset = true;
+			Forward = false;
+			Turnleft = false;
+			Turnright = false;
+			Forwardkeep = false;
 
-	if (AgentData.turn_left)
-	{
-		Turnleft = true;
-		Turnright = false;
-		Forwardkeep = false;
+		}
+		if (AgentData.move_forward && !Forwardkeep)
+		{
+			Forward = true;
+			Turnright = false;
+			Turnleft = false;
+			Forwardkeep = true;
+		}
+		else
+		{
+			Forward = false;
+		}
 
-	}
+		if (AgentData.turn_left)
+		{
+			Turnleft = true;
+			Turnright = false;
+			Forwardkeep = false;
 
-	if (AgentData.turn_right)
-	{
-		Turnleft = false;
-		Turnright = true;
-		Forwardkeep = false;
+		}
 
-	}
+		if (AgentData.turn_right)
+		{
+			Turnleft = false;
+			Turnright = true;
+			Forwardkeep = false;
 
-	// Turnleft = AgentData.turn_left;
-	// Turnright = AgentData.turn_right;
+		}
 
-	if (!AgentData.move_forward && !AgentData.turn_left && !AgentData.turn_right)
-	{
-		Turnleft = false;
-		Turnright = false;
-		Forwardkeep = false;
+		// Turnleft = AgentData.turn_left;
+		// Turnright = AgentData.turn_right;
+
+		if (!AgentData.move_forward && !AgentData.turn_left && !AgentData.turn_right)
+		{
+			Turnleft = false;
+			Turnright = false;
+			Forwardkeep = false;
+		}
+
+		GetEnvStatus();
 	}
 	
 }
@@ -88,10 +107,28 @@ void ARLAgent::OnUdpServerComponentRLAgentDataRecv(FString RecvData, FString& Re
 	{
 		FJsonObjectConverter::JsonObjectStringToUStruct(*RecvData, &AgentData, 0, 0);
 		RespData = "Action received.";
+		bActionReceived = true;
 	}
 	else
 	{
 		RespData = FString("{\"state\":\"[ERR] Decode json string failed.\"}");
 	}
 }
+
+void ARLAgent::UDPSendRLReward(FAgentReward Result)
+{
+	if (UdpClientComponent)
+	{
+		FString JsonData;
+		if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
+		{
+			UdpClientComponent->Send(JsonData, Host, Port);
+		}
+	}
+}
+
+//void ARLAgent::GetEnvStatus()
+//{
+//	;
+//}
 

@@ -38,6 +38,7 @@ reset_message = {"move_forward": False,
                  "reset": True,
                  }
 
+
 if __name__ == "__main__":
     env = gym.make('RL/RLTrack-v0')
     wrapped_env = gym.wrappers.RecordEpisodeStatistics(env, 50)  # Records episode-reward
@@ -55,22 +56,23 @@ if __name__ == "__main__":
         obs, info = wrapped_env.reset()
 
         done = False
-        while not done:
+        # while not done:
+        for steps in range(50):
             action = agent.sample_action(obs)
-            print(action)
 
             obs, reward, terminated, truncated, info = wrapped_env.step(action)
             agent.rewards.append(reward)
-
-    # action_list = [forward_message, turnright_message, turnleft_message, stop_message]
-    # env.reset()
-    # # for _ in range(50):
-    # while True:
-    #     observation, reward, terminated, _, info = env.step(1)
-    #     print(observation)
-    #     env.render()
-    #     time.sleep(1 / 5)
-
+            time.sleep(1/5)
+#
+#     # action_list = [forward_message, turnright_message, turnleft_message, stop_message]
+#     # env.reset()
+#     # # for _ in range(50):
+#     # while True:
+#     #     observation, reward, terminated, _, info = env.step(1)
+#     #     print(observation)
+#     #     env.render()
+#     #     time.sleep(1 / 5)
+#
     env.close()
 
 
