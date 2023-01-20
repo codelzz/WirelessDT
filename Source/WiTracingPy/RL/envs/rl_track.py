@@ -64,7 +64,7 @@ class RLtrackEnv(gym.Env):
 
         self.reward = 0
 
-        self.info = dict()
+        # self.info = dict()
 
         def on_data_sent(byte_data, address):
             # print(f"{address} << {repr(byte_data)}")
@@ -83,14 +83,14 @@ class RLtrackEnv(gym.Env):
             if 'reward' in temp:
                 # print(f"{address} >> {repr(temp)}")
                 received_data_json = json.loads(temp)
-                self.reward = received_data_json["position_reward"]
+                self.reward = -received_data_json["position_reward"]
 
         self.udp_server = UdpSocketClient(self.CLIENT_ENDPOINT, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
         self.udp_server.start()
 
     def _get_info(self):
         # json_object = json.loads(self.received_data)
-        return self.info
+        return dict()
 
     def _get_obs(self):
         if self.is_receiving:
@@ -116,7 +116,7 @@ class RLtrackEnv(gym.Env):
             "TXs": np.array([-255, -255, -255, -255, -255, -255, -255, -255, -255]),
         }
         self.reward = 0
-        info = dict()
+        info = self._get_info()
 
         print("Receiving TXs data from engine ...")
         time.sleep(1)
@@ -134,11 +134,17 @@ class RLtrackEnv(gym.Env):
 
         observation = self._get_obs()
         reward = self.reward
-        print(reward)
+        # print(reward)
         terminated = False
+
+        if reward < -100:
+            truncated = True
+        else:
+            truncated = False
+
         info = self._get_info()
 
-        return observation, reward, terminated, False, info
+        return observation, reward, terminated, truncated, info
 
     def render(self):
         pass
