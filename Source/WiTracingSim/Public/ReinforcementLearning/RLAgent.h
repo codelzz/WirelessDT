@@ -24,6 +24,10 @@ public:
 		bool turn_right = false;
 	UPROPERTY(BlueprintReadWrite, Category = "action")
 		bool reset = false;
+	UPROPERTY(BlueprintReadWrite, Category = "action")
+		float vector_x = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "action")
+		float vector_y = 0.0f;
 
 };
 

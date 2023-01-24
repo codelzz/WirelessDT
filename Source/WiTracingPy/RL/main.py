@@ -19,38 +19,12 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
-forward_message = {"move_forward": True,
-                   "turn_left": False,
-                   "turn_right": False,
-                   "reset": False,
-                   }
-turnright_message = {"move_forward": False,
-                     "turn_left": False,
-                     "turn_right": True,
-                     "reset": False,
-                     }
-turnleft_message = {"move_forward": False,
-                    "turn_left": True,
-                    "turn_right": False,
-                    "reset": False,
-                    }
-stop_message = {"move_forward": False,
-                "turn_left": False,
-                "turn_right": False,
-                "reset": False,
-                }
-reset_message = {"move_forward": False,
-                 "turn_left": False,
-                 "turn_right": False,
-                 "reset": True,
-                 }
-
 if __name__ == "__main__":
     env = gym.make('RL/RLTrack-v0')
     wrapped_env = gym.wrappers.RecordEpisodeStatistics(env, 50)  # Records episode-reward
     total_num_episodes = int(5e2)
     obs_space_dims = env.observation_space["TXs"].shape[0]
-    action_space_dims = env.action_space.n
+    action_space_dims = env.action_space.shape[0]
     print(obs_space_dims)
     print(action_space_dims)
 
@@ -65,6 +39,8 @@ if __name__ == "__main__":
         agent = Rltrack_Agent(obs_space_dims, action_space_dims)
         reward_over_episodes = []
 
+        print(agent.net)
+
         for episode in range(total_num_episodes):
             # gymnasium v26 requires users to set seed while resetting the environment
             obs, info = wrapped_env.reset()
@@ -72,7 +48,8 @@ if __name__ == "__main__":
             done = False
             while not done:
                 # for steps in range(50):
-                action = agent.sample_action(obs)
+                act = agent.sample_action(obs)
+                action = env.action_space.sample()
 
                 obs, reward, terminated, truncated, info = wrapped_env.step(action)
                 agent.rewards.append(reward)

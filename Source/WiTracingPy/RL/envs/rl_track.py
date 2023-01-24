@@ -46,6 +46,7 @@ class RLtrackEnv(gym.Env):
     CLIENT_ENDPOINT = settings.NETWORK_CONFIG['client_endpoint']
 
     action_list = [forward_message, turnright_message, turnleft_message, stop_message]
+
     # action_list = ["forward", "turnright", "turnleft", "stop"]
 
     def __init__(self, render_mode=None, Tx_num=9):
@@ -54,7 +55,8 @@ class RLtrackEnv(gym.Env):
                 "TXs": spaces.Box(-255, 0, shape=(Tx_num,), dtype=int),
             }
         )
-        self.action_space = spaces.Discrete(4)
+        # self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -124,12 +126,24 @@ class RLtrackEnv(gym.Env):
         return obs, info
 
     def step(self, action):
-        action = (action - action.min()) / (action.max() - action.min())
-
-        # Send action to Engine
-        message = random.choices(self.action_list, weights=action)[0]
-        message = json.dumps(message)
-        byte_message = str.encode(message)
+        # action = (action - action.min()) / (action.max() - action.min())
+        #
+        # # Send action to Engine
+        # message = random.choices(self.action_list, weights=action)[0]
+        # message = json.dumps(message)
+        # byte_message = str.encode(message)
+        # self.udp_server.sendto(byte_data=byte_message, address=self.SERVER_ENDPOINT)
+        vector_x = action.tolist()[0]
+        vector_y = action.tolist()[1]
+        action_message = {"move_forward": False,
+                          "turn_left": False,
+                          "turn_right": False,
+                          "reset": False,
+                          "vector_x": vector_x,
+                          "vector_y": vector_y,
+                          }
+        action_message = json.dumps(action_message)
+        byte_message = str.encode(action_message)
         self.udp_server.sendto(byte_data=byte_message, address=self.SERVER_ENDPOINT)
 
         observation = self._get_obs()
