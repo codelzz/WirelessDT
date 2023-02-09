@@ -11,9 +11,15 @@ AWiTracingAgent::AWiTracingAgent()
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 
-	UdpClientComponent = CreateDefaultSubobject<UUdpClientComponent>(TEXT("UdpServerComponent0"));
+	// create udp client
+	UdpClientComponent = CreateDefaultSubobject<UUdpClientComponent>(TEXT("UdpClientComponent0"));
 	UdpClientComponent = CastChecked<UUdpClientComponent>(GetUdpClientComponent());
 	UdpClientComponent->SetupAttachment(Root);
+
+	// create tcp client
+	TcpClientComponent = CreateDefaultSubobject<UTcpClientComponent>(TEXT("TcpClientComponent0"));
+	TcpClientComponent = CastChecked<UTcpClientComponent>(GetTcpClientComponent());
+	TcpClientComponent->SetupAttachment(Root);
 }
 
 void AWiTracingAgent::BeginPlay()
@@ -74,6 +80,54 @@ void AWiTracingAgent::UDPSendWiTracingResult(FWiTracingResult Result)
 		if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
 		{
 			UdpClientComponent->Send(JsonData, Host, Port);
+		}
+	}
+}
+
+void AWiTracingAgent::TCPConnect()
+{
+	if (TcpClientComponent)
+	{
+		TcpClientComponent->Connect(Host, Port);
+	}
+}
+
+void AWiTracingAgent::TCPClose()
+{
+	if (TcpClientComponent)
+	{
+		TcpClientComponent->Close();
+	}
+}
+
+void AWiTracingAgent::TCPSendWiTracingResult(FWiTracingResult Result)
+{
+	if (TcpClientComponent)
+	{
+		FString JsonData;
+		if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
+		{
+			TcpClientComponent->Send(JsonData);
+		}
+	}
+}
+
+void AWiTracingAgent::TCPSendWiTracingResults(TArray<FWiTracingResult> Results)
+{
+	if (TcpClientComponent)
+	{
+		FString Data = "";
+
+		for (auto Result : Results) {
+			FString JsonData;
+			if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
+			{
+				Data += JsonData;
+			}
+		}
+
+		if (Data != "") {
+			TcpClientComponent->Send(Data);
 		}
 	}
 }

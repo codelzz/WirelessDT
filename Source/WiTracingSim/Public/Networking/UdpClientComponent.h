@@ -44,6 +44,8 @@ public:
 
 	bool IsValid();
 
+	TSharedPtr<class FUdpClient> GetUdpClient() const { return UdpClient; }
+
 private:
 	TSharedPtr<class FUdpClient> UdpClient;
 };
