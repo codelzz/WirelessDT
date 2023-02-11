@@ -45,8 +45,13 @@ class Preprocessor(Runnable):
 
     def do(self):
         if not self.data_queue.empty():
-            data = self.data_queue.get()
-            self.preprocess(data)
+            # data = self.data_queue.get()
+            # self.preprocess(data)
+            with open(CSV_FILE, 'a', newline='') as f:
+                w = csv.DictWriter(f, fieldnames=self.csv_fields)
+                while not self.data_queue.empty():
+                    w.writerow(self.convert_to_csv_row(self.data_queue.get()))
+                f.close()
 
     def enqueue(self, data):
         self.data_queue.put(data)

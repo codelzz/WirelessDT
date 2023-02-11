@@ -7,6 +7,7 @@
 #include "WiTracing/Devices/WirelessRX.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
 #include "Networking/UdpClientComponent.h"
+#include "Networking/TcpClientComponent.h"
 #include "WiTracingAgent.generated.h"
 
 
@@ -34,8 +35,12 @@ public:
 	USceneComponent* Root;
 
 	/** Udp client for communication */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Wi Tracing", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
 		TObjectPtr<class UUdpClientComponent> UdpClientComponent;
+
+	/** Tcp client for communication */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
+		TObjectPtr<class UTcpClientComponent> TcpClientComponent;
 
 	/** buffer holding data for WiTracing Raw data, compare to the one without Vis, it won't be rendered to the scene for visualization */
 	UPROPERTY(EditAnywhere, Category="WiTracing")
@@ -46,11 +51,11 @@ public:
 	UTextureRenderTarget2D* TextureRenderTargetVis;
 
 	/** The host of target server indicate where the data is sent to */
-	UPROPERTY(EditAnywhere, category = "Endpint")
+	UPROPERTY(EditAnywhere, category = "Networking")
 		FString Host = TEXT("127.0.0.1");
 
 	/** The port of target server */
-	UPROPERTY(EditAnywhere, category = "Endpint")
+	UPROPERTY(EditAnywhere, category = "Networking")
 		uint16 Port = 8888;
 
 public:
@@ -107,6 +112,30 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	void UDPSendWiTracingResult(FWiTracingResult Result);
 
+
+	/**
+	 * Connect TCP server
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+		void TCPConnect();
+
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+		void TCPClose();
+
+	/**
+	 * Send Result via TCP Client
+	 * @param Result - the WiTracing result
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	void TCPSendWiTracingResult(FWiTracingResult Result);
+
+	/**
+	 * Send Result via TCP Client
+	 * @param Result - the WiTracing results
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	void TCPSendWiTracingResults(TArray<FWiTracingResult> Results);
+
 	/**
 	 * get all transmitter in current world
 	 * @return - all transmitter in current world
@@ -157,6 +186,12 @@ private:
 	 * @return the udp client component
 	 */
 	class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
+
+	/**
+	 * get tcp client
+	 * @return the udp client component
+	 */
+	class UTcpClientComponent* GetTcpClientComponent() const { return TcpClientComponent; }
 
 private:
 	/** transmitters in current world */

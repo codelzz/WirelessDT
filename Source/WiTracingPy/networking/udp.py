@@ -43,8 +43,9 @@ class UdpSocketSender(UdpSocketRunnable):
 class UdpSocketReceiver(UdpSocketRunnable):
     callback = None
     socket = None
+    count = 0
 
-    def __init__(self, socket, callback, wait_time=0.001):
+    def __init__(self, socket, callback, wait_time=0):
         super(UdpSocketReceiver, self).__init__(wait_time=wait_time)
         self.socket = socket
         self.callback = callback
@@ -57,6 +58,8 @@ class UdpSocketReceiver(UdpSocketRunnable):
             byte_data, address = self.socket.recvfrom(self.max_buffer_size)
             if self.callback is not None:
                 self.callback(byte_data, address)
+                self.count+=1
+                print(f"RECV:{self.count}")
         except ConnectionError as error:
             self.print(f'Disconnected! Reason: {error}')
 
