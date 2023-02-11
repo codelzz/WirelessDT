@@ -11,47 +11,20 @@ from networking.udp_socket_client import UdpSocketClient
 
 import json
 import random
+from numpy.linalg import norm
 
 
 class RLtrackEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 5}
-
-    forward_message = {"move_forward": True,
-                       "turn_left": False,
-                       "turn_right": False,
-                       "reset": False,
-                       }
-    turnright_message = {"move_forward": False,
-                         "turn_left": False,
-                         "turn_right": True,
-                         "reset": False,
-                         }
-    turnleft_message = {"move_forward": False,
-                        "turn_left": True,
-                        "turn_right": False,
-                        "reset": False,
-                        }
-    stop_message = {"move_forward": False,
-                    "turn_left": False,
-                    "turn_right": False,
-                    "reset": False,
-                    }
-    reset_message = {"move_forward": False,
-                     "turn_left": False,
-                     "turn_right": False,
-                     "reset": True,
-                     }
-
     SERVER_ENDPOINT = settings.NETWORK_CONFIG['server_endpoint']
     CLIENT_ENDPOINT = settings.NETWORK_CONFIG['client_endpoint']
-
-    action_list = [forward_message, turnright_message, turnleft_message, stop_message]
 
     # action_list = ["forward", "turnright", "turnleft", "stop"]
 
     def __init__(self, render_mode=None, Tx_num=9):
         self.observation_space = spaces.Dict(
             {
+                "Last_TXs": spaces.Box(-255, 0, shape=(Tx_num,), dtype=int),
                 "TXs": spaces.Box(-255, 0, shape=(Tx_num,), dtype=int),
             }
         )
@@ -65,6 +38,14 @@ class RLtrackEnv(gym.Env):
         self.tx_readings = dict()
 
         self.reward = 0
+
+        self.last_rx_position = np.array([0.0, 0.0, 90.0])
+        self.last_agent_position = np.array([0.0, 2500.0, 90.0])
+
+        self.rx_position = np.array([0.0, 0.0, 90.0])
+        self.agent_position = np.array([0.0, 2500.0, 90.0])
+
+        self.last_txs = None
 
         # self.info = dict()
 
@@ -85,10 +66,28 @@ class RLtrackEnv(gym.Env):
             if 'reward' in temp:
                 # print(f"{address} >> {repr(temp)}")
                 received_data_json = json.loads(temp)
-                self.reward = -received_data_json["position_reward"]
+                # self.reward = -received_data_json["position_reward"]
+                # print("rx_x: ", received_data_json["rx_x"])
+
+                self.last_rx_position = self.rx_position
+                self.last_agent_position = self.agent_position
+
+                self.rx_position = np.array([received_data_json["rx_x"], received_data_json["rx_y"], received_data_json["rx_z"]])
+                self.agent_position = np.array([received_data_json["agent_x"], received_data_json["agent_y"], received_data_json["agent_z"]])
 
         self.udp_server = UdpSocketClient(self.CLIENT_ENDPOINT, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
         self.udp_server.start()
+
+    def get_reward(self):
+        rx_move = self.rx_position - self.last_rx_position
+        agent_move = self.agent_position - self.last_agent_position
+
+        # compute cosine similarity
+        # cosine = np.dot(rx_move, agent_move) / (norm(rx_move) * norm(agent_move))
+        # return cosine
+        diff = rx_move - agent_move
+        return -np.sum(abs(diff))
+
 
     def _get_info(self):
         # json_object = json.loads(self.received_data)
@@ -97,28 +96,44 @@ class RLtrackEnv(gym.Env):
     def _get_obs(self):
         if self.is_receiving:
             txs = np.fromiter(self.tx_readings.values(), dtype=int)
+            last_txs = np.copy(self.last_txs)
+            self.last_txs = txs
             # print(txs)
             return {
+                "Last_TXs": last_txs,
                 "TXs": txs,
             }
         else:
             return {
+                "Last_TXs": np.array([-255, -255, -255, -255, -255, -255, -255, -255, -255]),
                 "TXs": np.array([-255, -255, -255, -255, -255, -255, -255, -255, -255]),
             }
 
     def reset(self, seed=None, options=None):
         print("Reseting Env ...")
         super().reset(seed=seed)
-        data = self.reset_message
-        data = json.dumps(data)
+        reset_message = {"move_forward": False,
+                          "turn_left": False,
+                          "turn_right": False,
+                          "reset": True,
+                          }
+        data = json.dumps(reset_message)
         byte_data = str.encode(data)
         self.udp_server.sendto(byte_data=byte_data, address=self.SERVER_ENDPOINT)
 
         obs = {
+            "Last_TXs": np.array([-255, -255, -255, -255, -255, -255, -255, -255, -255]),
             "TXs": np.array([-255, -255, -255, -255, -255, -255, -255, -255, -255]),
         }
+        self.last_txs = np.array([-255, -255, -255, -255, -255, -255, -255, -255, -255])
         self.reward = 0
         info = self._get_info()
+
+        self.last_rx_position = np.array([0.0, 0.0, 90.0])
+        self.last_agent_position = np.array([0.0, 2500.0, 90.0])
+
+        self.rx_position = np.array([0.0, 0.0, 90.0])
+        self.agent_position = np.array([0.0, 2500.0, 90.0])
 
         print("Receiving TXs data from engine ...")
         time.sleep(1)
@@ -133,6 +148,7 @@ class RLtrackEnv(gym.Env):
         # message = json.dumps(message)
         # byte_message = str.encode(message)
         # self.udp_server.sendto(byte_data=byte_message, address=self.SERVER_ENDPOINT)
+        action = action[0]
         vector_x = action.tolist()[0]
         vector_y = action.tolist()[1]
         action_message = {"move_forward": False,
@@ -145,9 +161,9 @@ class RLtrackEnv(gym.Env):
         action_message = json.dumps(action_message)
         byte_message = str.encode(action_message)
         self.udp_server.sendto(byte_data=byte_message, address=self.SERVER_ENDPOINT)
-
+        # print("action sent!")
         observation = self._get_obs()
-        reward = self.reward
+        reward = self.get_reward()
         # print(reward)
         terminated = False
 

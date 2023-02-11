@@ -39,6 +39,19 @@ struct FAgentReward
 public:
 	UPROPERTY(BlueprintReadWrite, Category = "reward")
 		float position_reward;
+	UPROPERTY(BlueprintReadWrite, Category = "reward")
+		float rx_x;
+	UPROPERTY(BlueprintReadWrite, Category = "reward")
+		float rx_y;
+	UPROPERTY(BlueprintReadWrite, Category = "reward")
+		float rx_z;
+	UPROPERTY(BlueprintReadWrite, Category = "reward")
+		float agent_x;
+	UPROPERTY(BlueprintReadWrite, Category = "reward")
+		float agent_y;
+	UPROPERTY(BlueprintReadWrite, Category = "reward")
+		float agent_z;
+
 
 };
 
