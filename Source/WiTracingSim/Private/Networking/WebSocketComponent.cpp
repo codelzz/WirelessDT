@@ -1,20 +1,18 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Networking/WebSocketGameInstance.h"
+#include "Networking/WebSocketComponent.h"
 #include "WebSocketsModule.h"
 
-void UWebSocketGameInstance::Init()
+void UWebSocketComponent::BeginPlay()
 {
-	Super::Init();
+	Super::BeginPlay();
 
 	if (!FModuleManager::Get().IsModuleLoaded("WebSockets"))
 	{
 		FModuleManager::Get().LoadModule("WebSockets");
 	}
-
 	WebSocket = FWebSocketsModule::Get().CreateWebSocket("ws://localhost:8080");
-
 	WebSocket->OnConnected().AddLambda([]()
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "Successful connected!");
@@ -50,12 +48,12 @@ void UWebSocketGameInstance::Init()
 	WebSocket->Connect();
 }
 
-
-void UWebSocketGameInstance::Shutdown()
+void UWebSocketComponent::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	if (WebSocket->IsConnected())
 	{
 		WebSocket->Close();
 	}
-	Super::Shutdown();
+
+	Super::EndPlay(EndPlayReason);
 }

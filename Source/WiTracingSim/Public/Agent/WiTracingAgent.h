@@ -6,8 +6,11 @@
 #include "WiTracing/Devices/WirelessTX.h"
 #include "WiTracing/Devices/WirelessRX.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
-#include "Networking/UdpClientComponent.h"
-#include "Networking/TcpClientComponent.h"
+//#include "Networking/UdpClientComponent.h"
+//#include "Networking/TcpClientComponent.h"
+//#include "Networking/WebSocketComponent.h"
+
+#include "IWebSocket.h"
 #include "WiTracingAgent.generated.h"
 
 
@@ -26,6 +29,7 @@ class AWiTracingAgent: public AActor
 public:
 	AWiTracingAgent();
 	virtual void BeginPlay() override;
+	virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaScends) override;
 
 public:
@@ -34,13 +38,13 @@ public:
 	UPROPERTY()
 	USceneComponent* Root;
 
-	/** Udp client for communication */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
-		TObjectPtr<class UUdpClientComponent> UdpClientComponent;
+	///** Udp client for communication */
+	//UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
+	//	TObjectPtr<class UUdpClientComponent> UdpClientComponent;
 
-	/** Tcp client for communication */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
-		TObjectPtr<class UTcpClientComponent> TcpClientComponent;
+	///** Tcp client for communication */
+	//UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
+	//	TObjectPtr<class UTcpClientComponent> TcpClientComponent;
 
 	/** buffer holding data for WiTracing Raw data, compare to the one without Vis, it won't be rendered to the scene for visualization */
 	UPROPERTY(EditAnywhere, Category="WiTracing")
@@ -106,35 +110,41 @@ public:
 	void PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection = true, bool bDenoised = false);
 
 	/**
+	 * Send Result via WebSocket Client
+	 * @param Results - the Array of WiTracing result
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	void WebSocketSend(TArray<FWiTracingResult> Results);
+	
+	/**
 	 * Send Result via UDP Client
 	 * @param Result - the WiTracing result
 	 */
-	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	void UDPSendWiTracingResult(FWiTracingResult Result);
+	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	//void UDPSendWiTracingResult(FWiTracingResult Result);
 
+	///**
+	// * Connect TCP server
+	// */
+	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	//	void TCPConnect();
 
-	/**
-	 * Connect TCP server
-	 */
-	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-		void TCPConnect();
-
-	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-		void TCPClose();
+	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	//	void TCPClose();
 
 	/**
 	 * Send Result via TCP Client
 	 * @param Result - the WiTracing result
 	 */
-	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	void TCPSendWiTracingResult(FWiTracingResult Result);
+	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	//void TCPSendWiTracingResult(FWiTracingResult Result);
 
-	/**
-	 * Send Result via TCP Client
-	 * @param Result - the WiTracing results
-	 */
-	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	void TCPSendWiTracingResults(TArray<FWiTracingResult> Results);
+	///**
+	// * Send Result via TCP Client
+	// * @param Result - the WiTracing results
+	// */
+	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	//void TCPSendWiTracingResults(TArray<FWiTracingResult> Results);
 
 	/**
 	 * get all transmitter in current world
@@ -169,6 +179,10 @@ public:
 	const TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
 
 private:
+	//--WebSocket
+	void InitWebSocket();
+	//--WebSocket End
+
 	/** initialize render target for saving WiTracing result */
 	void InitRenderTargets();
 
@@ -181,17 +195,17 @@ private:
 	/** get render target for caching WiTracing result */
 	UTextureRenderTarget2D* GetRenderTarget(bool bVisualized = false);
 
-	/**
-	 * get udp client
-	 * @return the udp client component
-	 */
-	class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
+	///**
+	// * get udp client
+	// * @return the udp client component
+	// */
+	//class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
 
-	/**
-	 * get tcp client
-	 * @return the udp client component
-	 */
-	class UTcpClientComponent* GetTcpClientComponent() const { return TcpClientComponent; }
+	///**
+	// * get tcp client
+	// * @return the udp client component
+	// */
+	//class UTcpClientComponent* GetTcpClientComponent() const { return TcpClientComponent; }
 
 private:
 	/** transmitters in current world */
@@ -199,6 +213,9 @@ private:
 
 	/** receivers in current world */
 	TArray<AWirelessRX*> RXs;
+
+	/** Web Socket */
+	TSharedPtr<IWebSocket> WebSocket;
 };
 
 // 	APlayerController* PlayerController;
