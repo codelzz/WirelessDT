@@ -864,3 +864,6 @@ Camera_Images/
 # Content/ShoppingMall/Meshes
 # Content/ShoppingMall/Textures
 # Content/ShoppingMall/Trees
+
+# ignored draw.io
+*.bkp
