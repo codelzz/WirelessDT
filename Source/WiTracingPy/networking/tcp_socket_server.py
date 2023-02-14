@@ -1,7 +1,7 @@
 import socket
 import queue
 
-from thread.runnable import Runnable
+from udpthread.runnable import Runnable
 
 class TcpSocketRunnable(Runnable):
     max_buffer_size = 65507  # value based on Unreal source code UdpSocketReceiver.h [1].
