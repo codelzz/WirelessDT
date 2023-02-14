@@ -9,7 +9,7 @@
 //#include "Networking/UdpClientComponent.h"
 //#include "Networking/TcpClientComponent.h"
 //#include "Networking/WebSocketComponent.h"
-
+#include "WebSocketsModule.h"
 #include "IWebSocket.h"
 #include "WiTracingAgent.generated.h"
 

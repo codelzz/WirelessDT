@@ -4,6 +4,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "JsonObjectConverter.h"
 #include "WebSocketsModule.h"
+#include "IWebSocket.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
 
 
@@ -130,6 +131,13 @@ const TArray<AWirelessTX*> AWiTracingAgent::GetTXsOutRange(FVector Origin, float
 void AWiTracingAgent::InitWebSocket()
 {
 	if (!FModuleManager::Get().IsModuleLoaded("WebSockets")) 
+	{
+		// FModuleManager::Get().LoadModule("WebSockets");
+		FModuleManager::Get().LoadModuleChecked("WebSockets");
+		FWebSocketsModule* wsModule = &FWebSocketsModule::Get();
+	}
+
+	if (!FModuleManager::Get().IsModuleLoaded("WebSockets"))
 	{
 		FModuleManager::Get().LoadModule("WebSockets");
 	}
