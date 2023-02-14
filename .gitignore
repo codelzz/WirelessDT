@@ -851,17 +851,16 @@ FodyWeavers.xsd
 
 # ignored files on cityperson branch (Yu)
 IMU_data/
-
 Camera_Images/
 
-Content/CitySampleCrowd/Character/
-Content/CitySampleCrowd/Maps/
-Content/CitySampleCrowd/AssetGuidelines/
+# Content/CitySampleCrowd/Character/
+# Content/CitySampleCrowd/Maps/
+# Content/CitySampleCrowd/AssetGuidelines/
 
-Content/ShoppingMall/Blueprints
-Content/ShoppingMall/Demo_Character
-Content/ShoppingMall/Fountain
-Content/ShoppingMall/Materials
-Content/ShoppingMall/Meshes
-Content/ShoppingMall/Textures
-Content/ShoppingMall/Trees
+# Content/ShoppingMall/Blueprints
+# Content/ShoppingMall/Demo_Character
+# Content/ShoppingMall/Fountain
+# Content/ShoppingMall/Materials
+# Content/ShoppingMall/Meshes
+# Content/ShoppingMall/Textures
+# Content/ShoppingMall/Trees

@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # client = UdpSocketClient(CLIENT_ENDPOINT, on_data_sent=on_data_sent, on_data_recv=on_data_recv)
     # client.start()
 
-    server = TcpSocketServer(endpoint=("192.168.31.110", 7777), on_data_recv=on_data_recv)
+    server = TcpSocketServer(endpoint=("192.168.31.200", 7777), on_data_recv=on_data_recv)
     server.start()
 
     while True:
