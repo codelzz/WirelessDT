@@ -16,6 +16,7 @@ public class WiTracingSim : ModuleRules
 			// Network Modules
 			"Sockets",
 			"Networking",
+			"WebSockets",
 			// Wi Tracing
 			"Renderer",
 			// Json

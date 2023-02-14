@@ -3,6 +3,7 @@
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "JsonObjectConverter.h"
+#include "Networking/WebSocketGameInstance.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
 
 
@@ -127,7 +128,15 @@ void AWiTracingAgent::TCPSendWiTracingResults(TArray<FWiTracingResult> Results)
 		}
 
 		if (Data != "") {
-			TcpClientComponent->Send(Data);
+			// TcpClientComponent->Send(Data);
+			UWebSocketGameInstance* GameInstance = Cast<UWebSocketGameInstance>(GetGameInstance());
+
+			if (GameInstance)
+			{
+				if (GameInstance->WebSocket->IsConnected()) {
+					GameInstance->WebSocket->Send(Data);
+				}
+			}
 		}
 	}
 }

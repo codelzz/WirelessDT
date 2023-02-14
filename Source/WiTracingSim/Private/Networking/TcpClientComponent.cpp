@@ -43,7 +43,7 @@ bool FTcpClient::Connect(const FString Host, const uint16 Port)
 	// Verify it is connected
 	if (!Connected)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Unable to connect to TCP \"%s\":\"%d\"!"), *Host, Port);
+		UE_LOG(LogTemp, Warning, TEXT("[FTcpClient] Unable to connect to TCP \"%s\":\"%d\"!"), *Host, Port);
 		return false;
 	}
 
@@ -56,7 +56,7 @@ bool FTcpClient::Send(const FString& Data)
 	FSocket* Socket = GetSocket();
 	// return if socket invalid
 	if (Socket == nullptr) {
-		UE_LOG(LogTemp, Warning, TEXT("Invalid Tcp Socket!"));
+		UE_LOG(LogTemp, Warning, TEXT("[FTcpClient] Invalid Tcp Socket!"));
 		return false;
 	}
 
