@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{5E24DB39-4214-A64C-66DB-07920213A5DD}",
+	"EngineAssociation": "{5E0AA2AF-4B73-5879-30AB-5BAA834EB94A}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -25,6 +25,14 @@
 			"Name": "KantanCharts",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/89bd18db011b4bd19606db2e31020f13"
+		},
+		{
+			"Name": "VictoryBPLibrary",
+			"Enabled": true
+		},
+		{
+			"Name": "RigLogic",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
