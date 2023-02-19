@@ -32,6 +32,9 @@ class FeedForwardNN(nn.Module):
         y = self.layer3(activation2)
         return y
 
+    def init_hidden(self, batch_size):
+        pass
+
 
     # def forward(self, obs):
     #     # if isinstance(obs, tuple):

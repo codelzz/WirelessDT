@@ -37,6 +37,7 @@ class RLtrackOfflineEnv(gym.Env):
         self.tx_readings = dict()
 
         self.reward = 0
+        self.accumulated_reward = 0
 
         self.last_rx_position = np.array([0.0, 0.0, 90.0])
         self.last_agent_position = np.array([0.0, 2500.0, 90.0])
@@ -44,8 +45,8 @@ class RLtrackOfflineEnv(gym.Env):
         self.rx_position = np.array([0.0, 0.0, 90.0])
         self.agent_position = np.array([0.0, 2500.0, 90.0])
 
-        self.df = pd.read_csv('out0.csv')
-        self.step_length = 1
+        self.df = self.preprocess_data()
+        self.step_length = 60
         self.df_idx = 0
         self.move_scale = 10
 
@@ -53,23 +54,45 @@ class RLtrackOfflineEnv(gym.Env):
 
         self.last_txs = None
 
+    def ab(self, df):
+        return df.values
+
+    def preprocess_data(self):
+        df = pd.read_csv('raw.csv')
+        df = df.groupby(['timestamp', 'x', 'y', 'z'])['rssi'].apply(self.ab)
+        df = df.reset_index()
+
+        return df
+
+
     def get_reward(self, vector_x, vector_y):
         agent_move = np.array([vector_x * self.move_scale, vector_y * self.move_scale])
-        diff = self.movement - agent_move
-        return -np.sum(abs(diff))
+        # diff = self.movement - agent_move
+        cosine = np.dot(self.movement, agent_move) / (norm(self.movement) * norm(agent_move))
+
+        move_length = np.linalg.norm(self.movement)
+        action_length = np.linalg.norm(agent_move)
+        distance = -abs(move_length - action_length)
+
+        # reward = cosine + distance
+        reward = cosine
+
+        return reward
 
 
     def _get_info(self):
-        # json_object = json.loads(self.received_data)
-        return dict()
+        info = {
+            "Movement": self.movement
+        }
+        return info
 
     def _get_obs(self):
-        last_tx = self.df.iloc[self.df_idx].values[4:].astype(int)
+        last_tx = self.df.iloc[self.df_idx].values[4:][0].astype(np.int32)
         last_location = self.df.iloc[self.df_idx].values[1:3]
-        tx = self.df.iloc[self.df_idx + self.step_length].values[4:].astype(int)
+        tx = self.df.iloc[self.df_idx + self.step_length].values[4:][0].astype(np.int32)
         location = self.df.iloc[self.df_idx + self.step_length].values[1:3]
         self.movement = location - last_location
-        self.df_idx += 1
+        self.df_idx += self.step_length
         obs = {
             "Last_TXs": last_tx,
             "TXs": tx,
@@ -79,11 +102,12 @@ class RLtrackOfflineEnv(gym.Env):
     def reset(self, seed=None, options=None):
         print("Reseting Env ...")
         super().reset(seed=seed)
-        self.df_idx = 1
+        random_start = random.randint(0, 60)
+        self.df_idx = random_start
 
-        last_tx = self.df.iloc[self.df_idx].values[4:].astype(int)
+        last_tx = self.df.iloc[self.df_idx].values[4:][0].astype(np.int32)
         last_location = self.df.iloc[self.df_idx].values[1:3]
-        tx = self.df.iloc[self.df_idx + self.step_length].values[4:].astype(int)
+        tx = self.df.iloc[self.df_idx + self.step_length].values[4:][0].astype(np.int32)
         location = self.df.iloc[self.df_idx + self.step_length].values[1:3]
         self.movement = location - last_location
         obs = {
@@ -91,9 +115,10 @@ class RLtrackOfflineEnv(gym.Env):
             "TXs": tx,
         }
         self.reward = 0
+        self.accumulated_reward = 0
         info = self._get_info()
 
-        self.df_idx += 1
+        self.df_idx += self.step_length
 
         return obs, info
 
@@ -104,13 +129,18 @@ class RLtrackOfflineEnv(gym.Env):
         # print("action sent!")
         observation = self._get_obs()
         reward = self.get_reward(vector_x, vector_y)
+        self.accumulated_reward += reward
         # print(reward)
         terminated = False
+        truncated = False
 
-        if reward < -100:
+        # if self.accumulated_reward < -2000:
+        #     truncated = True
+        # else:
+        #     truncated = False
+
+        if self.df_idx + self.step_length >= self.df.shape[0]:
             truncated = True
-        else:
-            truncated = False
 
         info = self._get_info()
 

@@ -9,14 +9,14 @@ import RL
 import time
 from matplotlib import pyplot as plt
 
-class PPO_UE5_OFFLINE:
+class OFFLINE_SUPERVISED:
     def __init__(self, env):
         # Extract environment information
         self.env = env
         self.obs_dim = env.observation_space["TXs"].shape[0]
         self.act_dim = env.action_space.shape[0]
 
-        self.load_weight = True
+        self.load_weight = False
 
         # ALG STEP 1
         # Initialize actor and critic networks
@@ -39,8 +39,7 @@ class PPO_UE5_OFFLINE:
 
         self.actor_optim = Adam(self.actor.parameters(), lr=self.lr)
         self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
-
-
+        self.criterion = nn.BCELoss()
 
     def get_action(self, obs):
         # Query the actor network for a mean action.
@@ -84,7 +83,6 @@ class PPO_UE5_OFFLINE:
         batch_rtgs = torch.tensor(batch_rtgs, dtype=torch.float)
         return batch_rtgs
 
-
     def process_obs(self, obs):
         last_tx = obs["Last_TXs"]
         tx = obs["TXs"]
@@ -98,6 +96,7 @@ class PPO_UE5_OFFLINE:
         batch_rews = []  # batch rewards
         batch_rtgs = []  # batch rewards-to-go
         batch_lens = []  # episodic lengths in batch
+        batch_labels = []
 
         # Number of timesteps run so far this batch
         t = 0
@@ -118,8 +117,10 @@ class PPO_UE5_OFFLINE:
 
                 action, log_prob = self.get_action(obs)
                 # obs, rew, done, _ = self.env.step(action)
-                obs, rew, terminated, truncated, _ = self.env.step(action)
+                obs, rew, terminated, truncated, info = self.env.step(action)
 
+                label = info["Movement"]
+                batch_labels.append(label)
                 # Collect reward, action, and log prob
                 ep_rews.append(rew)
                 batch_acts.append(action)
@@ -139,7 +140,7 @@ class PPO_UE5_OFFLINE:
             # ALG STEP #4
             batch_rtgs = self.compute_rtgs(batch_rews)
             # Return the batch data
-            return batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens
+            return batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens, batch_labels
 
     def learn(self, total_timesteps):
         batch_rtgs_list = []
@@ -147,50 +148,13 @@ class PPO_UE5_OFFLINE:
         while t_so_far < total_timesteps:
             print("Learning at timestep ", t_so_far)
             # ALG STEP 3
-            batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens = self.rollout()
+            batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens, batch_labels = self.rollout()
             # Calculate how many timesteps we collected this batch
             t_so_far += np.sum(batch_lens)
-            batch_rtgs_copy = torch.clone(batch_rtgs).detach().numpy()
 
-            rtg_sum = np.sum(batch_rtgs_copy)
-            print(rtg_sum)
-            batch_rtgs_list.append(rtg_sum)
 
-            # Calculate V_phi and pi_theta(a_t | s_t)
-            V, curr_log_probs = self.evaluate(batch_obs, batch_acts)
-            # ALG STEP 5
-            # Calculate advantage
-            A_k = batch_rtgs - V.detach()
 
-            # Normalize advantages
-            A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
 
-            for _ in range(self.n_updates_per_iteration):
-                # epoch code
-                # Calculate pi_theta(a_t | s_t)
-                V, curr_log_probs = self.evaluate(batch_obs, batch_acts)
-
-                # Calculate ratios
-                ratios = torch.exp(curr_log_probs - batch_log_probs)
-
-                # Calculate surrogate losses
-                surr1 = ratios * A_k
-                surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * A_k
-
-                actor_loss = (-torch.min(surr1, surr2)).mean()
-                critic_loss = nn.MSELoss()(V, batch_rtgs)
-
-                # Calculate gradients and perform backward propagation for actor
-                # network
-                self.actor_optim.zero_grad()
-                actor_loss.backward(retain_graph=True)
-                self.actor_optim.step()
-
-                # Calculate gradients and perform backward propagation for critic network
-                self.critic_optim.zero_grad()
-                critic_loss.backward()
-                self.critic_optim.step()
-                # Save our model if it's time
         torch.save(self.actor.state_dict(), './ppo_actor.pth')
         torch.save(self.critic.state_dict(), './ppo_critic.pth')
         plt.plot(batch_rtgs_list)
@@ -209,7 +173,6 @@ class PPO_UE5_OFFLINE:
         # Return predicted values V and log probs log_probs
         return V, log_probs
 
-
 if __name__ == "__main__":
     env = gym.make('RL/RLTrackOffline-v0')
     wrapped_env = gym.wrappers.RecordEpisodeStatistics(env, 50)  # Records episode-reward
@@ -218,5 +181,5 @@ if __name__ == "__main__":
     # print(obs_space_dims)
     # print(action_space_dims)
 
-    agent = PPO_UE5_OFFLINE(env)
+    agent = OFFLINE_SUPERVISED(env)
     agent.learn(150000)

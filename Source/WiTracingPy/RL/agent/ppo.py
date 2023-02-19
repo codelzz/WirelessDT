@@ -182,4 +182,4 @@ class PPO:
 if __name__ == "__main__":
     env = gym.make('Pendulum-v1')
     model = PPO(env)
-    model.learn(500000)
+    model.learn(50000)
