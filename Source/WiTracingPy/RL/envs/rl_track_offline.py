@@ -82,7 +82,7 @@ class RLtrackOfflineEnv(gym.Env):
 
     def _get_info(self):
         info = {
-            "Movement": self.movement
+            "Movement": np.array(self.movement, dtype=np.float)
         }
         return info
 
@@ -128,7 +128,8 @@ class RLtrackOfflineEnv(gym.Env):
         vector_y = action.tolist()[1]
         # print("action sent!")
         observation = self._get_obs()
-        reward = self.get_reward(vector_x, vector_y)
+        # reward = self.get_reward(vector_x, vector_y)
+        reward = 0
         self.accumulated_reward += reward
         # print(reward)
         terminated = False

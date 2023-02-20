@@ -8,6 +8,8 @@ import gymnasium as gym
 import RL
 import time
 from matplotlib import pyplot as plt
+from sklearn.preprocessing import normalize
+
 
 class OFFLINE_SUPERVISED:
     def __init__(self, env):
@@ -16,7 +18,7 @@ class OFFLINE_SUPERVISED:
         self.obs_dim = env.observation_space["TXs"].shape[0]
         self.act_dim = env.action_space.shape[0]
 
-        self.load_weight = False
+        self.load_weight = True
 
         # ALG STEP 1
         # Initialize actor and critic networks
@@ -39,12 +41,12 @@ class OFFLINE_SUPERVISED:
 
         self.actor_optim = Adam(self.actor.parameters(), lr=self.lr)
         self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
-        self.criterion = nn.BCELoss()
+        self.criterion = nn.MSELoss()
 
-    def get_action(self, obs):
+    def get_action(self, obs, hidden):
         # Query the actor network for a mean action.
         # Same thing as calling self.actor.forward(obs)
-        mean = self.actor(obs)
+        mean = self.actor(obs, hidden)
         # Create our Multivariate Normal Distribution
         dist = MultivariateNormal(mean, self.cov_mat)
         # Sample an action from the distribution and get its log prob
@@ -57,7 +59,7 @@ class OFFLINE_SUPERVISED:
         # of the graph and just convert the action to numpy array.
         # log prob as tensor is fine. Our computation graph will
         # start later down the line.
-        return action.detach().numpy(), log_prob.detach()
+        return action.detach().numpy(), log_prob.detach(), hidden
 
     def _init_hyperparameters(self):
         # Default values for hyperparameters, will need to change later.
@@ -66,7 +68,7 @@ class OFFLINE_SUPERVISED:
         self.gamma = 0.95
         self.n_updates_per_iteration = 5
         self.clip = 0.2  # As recommended by the paper
-        self.lr = 0.0005
+        self.lr = 0.0001
 
     def compute_rtgs(self, batch_rews):
         # The rewards-to-go (rtg) per episode per batch to return.
@@ -115,16 +117,17 @@ class OFFLINE_SUPERVISED:
                 obs = np.expand_dims(obs, axis=0)
                 batch_obs.append(obs)
 
-                action, log_prob = self.get_action(obs)
+                # action, log_prob, hidden = self.get_action(obs, hidden)
                 # obs, rew, done, _ = self.env.step(action)
+                action = np.array([[0.0, 0.0]])
                 obs, rew, terminated, truncated, info = self.env.step(action)
 
                 label = info["Movement"]
                 batch_labels.append(label)
                 # Collect reward, action, and log prob
                 ep_rews.append(rew)
-                batch_acts.append(action)
-                batch_log_probs.append(log_prob)
+                # batch_acts.append(action)
+                # batch_log_probs.append(log_prob)
                 if terminated or truncated:
                     break
             # Collect episodic length and rewards
@@ -134,9 +137,9 @@ class OFFLINE_SUPERVISED:
             # Reshape data as tensors in the shape specified before returning
             batch_obs = np.vstack(batch_obs)
             batch_obs = torch.tensor(batch_obs, dtype=torch.float)
-            batch_acts = np.vstack(batch_acts)
-            batch_acts = torch.tensor(batch_acts, dtype=torch.float)
-            batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float)
+            # batch_acts = np.vstack(batch_acts)
+            # batch_acts = torch.tensor(batch_acts, dtype=torch.float)
+            # batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float)
             # ALG STEP #4
             batch_rtgs = self.compute_rtgs(batch_rews)
             # Return the batch data
@@ -144,34 +147,65 @@ class OFFLINE_SUPERVISED:
 
     def learn(self, total_timesteps):
         batch_rtgs_list = []
+        train_losses = []
         t_so_far = 0  # Timesteps simulated so far
+        epoch = 0
+        # h = self.actor.init_hidden(self.max_timesteps_per_episode)
+        self.actor.train()
         while t_so_far < total_timesteps:
-            print("Learning at timestep ", t_so_far)
-            # ALG STEP 3
-            batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens, batch_labels = self.rollout()
+            print("Learning at epoch ", epoch)
+            # Collect batch of training data and label
+            batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens, batch_labels= self.rollout()
+            batch_labels = np.array(batch_labels)
+            normed_label = normalize(batch_labels, axis=1, norm='l1')
+            normed_label = torch.tensor(normed_label, dtype=torch.float)
+
+            self.actor_optim.zero_grad()
+            output = self.actor(batch_obs)
+            loss = self.criterion(output, normed_label)
+            train_losses.append(loss.item())
+            loss.backward()
+            # nn.utils.clip_grad_norm_(self.actor.parameters(), 5)
+            self.actor_optim.step()
             # Calculate how many timesteps we collected this batch
             t_so_far += np.sum(batch_lens)
-
-
-
+            epoch += 1
+            print("Loss: {:.6f}...".format(loss.item()))
 
         torch.save(self.actor.state_dict(), './ppo_actor.pth')
         torch.save(self.critic.state_dict(), './ppo_critic.pth')
-        plt.plot(batch_rtgs_list)
+        plt.plot(train_losses)
         plt.savefig(f'learning_timestep_{total_timesteps}.png')
 
-    def evaluate(self, batch_obs, batch_acts):
-        # Query critic network for a value V for each obs in batch_obs.
-        V = self.critic(batch_obs).squeeze()
+    def evaluate(self, total_timesteps):
+        with torch.no_grad():
+            batch_rtgs_list = []
+            train_losses = []
+            t_so_far = 0  # Timesteps simulated so far
+            epoch = 0
+            self.actor.eval()
+            while t_so_far < total_timesteps:
+                print("Evaluating at epoch ", epoch)
+                # Collect batch of training data and label
+                batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens, batch_labels = self.rollout()
+                batch_labels = np.array(batch_labels)
+                normed_label = normalize(batch_labels, axis=1, norm='l1')
+                normed_label = torch.tensor(normed_label, dtype=torch.float)
 
-        # Calculate the log probabilities of batch actions using most
-        # recent actor network.
-        # This segment of code is similar to that in get_action()
-        mean = self.actor(batch_obs)
-        dist = MultivariateNormal(mean, self.cov_mat)
-        log_probs = dist.log_prob(batch_acts)
-        # Return predicted values V and log probs log_probs
-        return V, log_probs
+                self.actor.zero_grad()
+                output = self.actor(batch_obs)
+                loss = self.criterion(output, normed_label)
+                train_losses.append(loss.item())
+                # Calculate how many timesteps we collected this batch
+                t_so_far += np.sum(batch_lens)
+                epoch += 1
+                print("Loss: {:.6f}...".format(loss.item()))
+
+            torch.save(self.actor.state_dict(), './ppo_actor.pth')
+            torch.save(self.critic.state_dict(), './ppo_critic.pth')
+            plt.plot(train_losses)
+            plt.savefig(f'evaluate_timestep_{total_timesteps}.png')
+
 
 if __name__ == "__main__":
     env = gym.make('RL/RLTrackOffline-v0')
@@ -182,4 +216,5 @@ if __name__ == "__main__":
     # print(action_space_dims)
 
     agent = OFFLINE_SUPERVISED(env)
-    agent.learn(150000)
+    # agent.learn(1500000)
+    agent.evaluate(50000)

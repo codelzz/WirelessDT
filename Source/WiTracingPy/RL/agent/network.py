@@ -16,24 +16,33 @@ class FeedForwardNN(nn.Module):
         # self.layer1 = nn.Linear(in_dim, 64)
         self.layer2 = nn.Linear(64, 64)
         self.layer3 = nn.Linear(64, out_dim)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, obs):
         if isinstance(obs, np.ndarray):
             obs = torch.tensor(obs, dtype=torch.float)
 
-        h_0 = Variable(torch.zeros(self.num_layers, obs.size(0), self.hidden_size))  # hidden state
-        c_0 = Variable(torch.zeros(self.num_layers, obs.size(0), self.hidden_size))  # internal state
+        h_0 = Variable(torch.zeros(
+            self.num_layers, obs.size(0), self.hidden_size))
 
-        output, (hn, cn) = self.lstm(obs, (h_0, c_0))  # lstm with input, hidden, and internal state
+        c_0 = Variable(torch.zeros(
+                self.num_layers, obs.size(0), self.hidden_size))
+
+        output, (hn, _) = self.lstm(obs, (h_0, c_0))  # lstm with input, hidden, and internal state
 
         hn = hn.contiguous().view(-1, self.hidden_size)
+        # output = output.squeeze()[:, -1, :]
         activation1 = F.relu(self.layer1(hn))
         activation2 = F.relu(self.layer2(activation1))
         y = self.layer3(activation2)
+        # y = self.sigmoid(y)
         return y
 
     def init_hidden(self, batch_size):
-        pass
+        weight = next(self.parameters()).data
+        hidden = (weight.new(self.num_layers, batch_size, self.hidden_size).zero_(),
+                  weight.new(self.num_layers, batch_size, self.hidden_size).zero_())
+        return hidden
 
 
     # def forward(self, obs):
