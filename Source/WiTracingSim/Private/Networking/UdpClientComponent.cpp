@@ -5,6 +5,7 @@
 
 FUdpClient::FUdpClient()
 {
+	FIPv4Endpoint::Initialize();
 	Socket = FUdpSocketBuilder(FString("UdpSocket")).AsReusable();
 	{
 		Sender = MakeShared<FUdpSocketSender, ESPMode::ThreadSafe>(Socket, TEXT("UdpSocketSender"));

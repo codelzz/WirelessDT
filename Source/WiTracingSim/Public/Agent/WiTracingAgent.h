@@ -38,14 +38,6 @@ public:
 	UPROPERTY()
 	USceneComponent* Root;
 
-	///** Udp client for communication */
-	//UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
-	//	TObjectPtr<class UUdpClientComponent> UdpClientComponent;
-
-	///** Tcp client for communication */
-	//UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
-	//	TObjectPtr<class UTcpClientComponent> TcpClientComponent;
-
 	/** buffer holding data for WiTracing Raw data, compare to the one without Vis, it won't be rendered to the scene for visualization */
 	UPROPERTY(EditAnywhere, Category="WiTracing")
 	UTextureRenderTarget2D* TextureRenderTarget;
@@ -117,36 +109,6 @@ public:
 	void WebSocketSend(TArray<FWiTracingResult> Results);
 	
 	/**
-	 * Send Result via UDP Client
-	 * @param Result - the WiTracing result
-	 */
-	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	//void UDPSendWiTracingResult(FWiTracingResult Result);
-
-	///**
-	// * Connect TCP server
-	// */
-	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	//	void TCPConnect();
-
-	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	//	void TCPClose();
-
-	/**
-	 * Send Result via TCP Client
-	 * @param Result - the WiTracing result
-	 */
-	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	//void TCPSendWiTracingResult(FWiTracingResult Result);
-
-	///**
-	// * Send Result via TCP Client
-	// * @param Result - the WiTracing results
-	// */
-	//UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	//void TCPSendWiTracingResults(TArray<FWiTracingResult> Results);
-
-	/**
 	 * get all transmitter in current world
 	 * @return - all transmitter in current world
 	 */
@@ -195,18 +157,6 @@ private:
 	/** get render target for caching WiTracing result */
 	UTextureRenderTarget2D* GetRenderTarget(bool bVisualized = false);
 
-	///**
-	// * get udp client
-	// * @return the udp client component
-	// */
-	//class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
-
-	///**
-	// * get tcp client
-	// * @return the udp client component
-	// */
-	//class UTcpClientComponent* GetTcpClientComponent() const { return TcpClientComponent; }
-
 private:
 	/** transmitters in current world */
 	TArray<AWirelessTX*> TXs;
@@ -217,29 +167,3 @@ private:
 	/** Web Socket */
 	TSharedPtr<IWebSocket> WebSocket;
 };
-
-// 	APlayerController* PlayerController;
-// 	void CachePlayerController();
-// 	int32 IterativeTXIndex = 0;
-
-/**
- * Get the TX will be traced in next iterative witracing
- */
-//UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-//AWirelessTX* GetNextTX();
-
-/**
- * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample
- * Instead of average over n signal period, we do n time sampling then find the maximum value
- * as our sample.
- */
- /*UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 int64 RSSISampling(TArray<float>& RSSIPdf, int64 n);*/
-	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 //	int64 RSSISampling(TArray<float> RSSIPdf);
-
-	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 //	int64 RSSIMultiSampling(TArray<float> RSSIPdf, int64 n=8);
-
-	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 //	int64 RSSIMaxSampling(TArray<float> RSSIPdf);

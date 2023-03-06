@@ -7,6 +7,7 @@ FUdpServer::FUdpServer(const FString Host, const uint16 Port)
 	, Delegate(nullptr)
 	, RLDelegate(nullptr)
 {
+	FIPv4Endpoint::Initialize();
 	FIPv4Address IPAddress;
 	FIPv4Address::Parse(Host, IPAddress);
 	Endpoint = FIPv4Endpoint(IPAddress, Port);
