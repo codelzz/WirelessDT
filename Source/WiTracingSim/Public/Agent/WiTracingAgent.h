@@ -6,7 +6,11 @@
 #include "WiTracing/Devices/WirelessTX.h"
 #include "WiTracing/Devices/WirelessRX.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
-#include "Networking/UdpClientComponent.h"
+//#include "Networking/UdpClientComponent.h"
+//#include "Networking/TcpClientComponent.h"
+//#include "Networking/WebSocketComponent.h"
+
+#include "IWebSocket.h"
 #include "WiTracingAgent.generated.h"
 
 
@@ -25,6 +29,7 @@ class AWiTracingAgent: public AActor
 public:
 	AWiTracingAgent();
 	virtual void BeginPlay() override;
+	virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaScends) override;
 
 public:
@@ -32,10 +37,6 @@ public:
 
 	UPROPERTY()
 	USceneComponent* Root;
-
-	/** Udp client for communication */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Wi Tracing", meta = (AllowPrivateAccess = "true"))
-		TObjectPtr<class UUdpClientComponent> UdpClientComponent;
 
 	/** buffer holding data for WiTracing Raw data, compare to the one without Vis, it won't be rendered to the scene for visualization */
 	UPROPERTY(EditAnywhere, Category="WiTracing")
@@ -46,11 +47,11 @@ public:
 	UTextureRenderTarget2D* TextureRenderTargetVis;
 
 	/** The host of target server indicate where the data is sent to */
-	UPROPERTY(EditAnywhere, category = "Endpint")
+	UPROPERTY(EditAnywhere, category = "Networking")
 		FString Host = TEXT("127.0.0.1");
 
 	/** The port of target server */
-	UPROPERTY(EditAnywhere, category = "Endpint")
+	UPROPERTY(EditAnywhere, category = "Networking")
 		uint16 Port = 8888;
 
 public:
@@ -101,12 +102,12 @@ public:
 	void PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirelessRX* WirelessRX, bool OctahedralProjection = true, bool bDenoised = false);
 
 	/**
-	 * Send Result via UDP Client
-	 * @param Result - the WiTracing result
+	 * Send Result via WebSocket Client
+	 * @param Results - the Array of WiTracing result
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
-	void UDPSendWiTracingResult(FWiTracingResult Result);
-
+	void WebSocketSend(TArray<FWiTracingResult> Results);
+	
 	/**
 	 * get all transmitter in current world
 	 * @return - all transmitter in current world
@@ -140,6 +141,10 @@ public:
 	const TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
 
 private:
+	//--WebSocket
+	void InitWebSocket();
+	//--WebSocket End
+
 	/** initialize render target for saving WiTracing result */
 	void InitRenderTargets();
 
@@ -152,42 +157,13 @@ private:
 	/** get render target for caching WiTracing result */
 	UTextureRenderTarget2D* GetRenderTarget(bool bVisualized = false);
 
-	/**
-	 * get udp client
-	 * @return the udp client component
-	 */
-	class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
-
 private:
 	/** transmitters in current world */
 	TArray<AWirelessTX*> TXs;
 
 	/** receivers in current world */
 	TArray<AWirelessRX*> RXs;
+
+	/** Web Socket */
+	TSharedPtr<IWebSocket> WebSocket;
 };
-
-// 	APlayerController* PlayerController;
-// 	void CachePlayerController();
-// 	int32 IterativeTXIndex = 0;
-
-/**
- * Get the TX will be traced in next iterative witracing
- */
-//UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-//AWirelessTX* GetNextTX();
-
-/**
- * The RSSI sampling simulate the physical layer rssi sampling process to generate RSSI sample
- * Instead of average over n signal period, we do n time sampling then find the maximum value
- * as our sample.
- */
- /*UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 int64 RSSISampling(TArray<float>& RSSIPdf, int64 n);*/
-	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 //	int64 RSSISampling(TArray<float> RSSIPdf);
-
-	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 //	int64 RSSIMultiSampling(TArray<float> RSSIPdf, int64 n=8);
-
-	 //UFUNCTION(BlueprintCallable, Category = "Wi Tracing")
-	 //	int64 RSSIMaxSampling(TArray<float> RSSIPdf);
