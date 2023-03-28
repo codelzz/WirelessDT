@@ -1,5 +1,5 @@
 DATAHUB_CONFIG = {
-    "endpoint": ("localhost",8080)
+    "endpoint": ("localhost",18888)
 }
 
 DATALOG_CONFIG = {

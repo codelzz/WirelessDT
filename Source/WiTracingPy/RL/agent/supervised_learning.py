@@ -217,4 +217,4 @@ if __name__ == "__main__":
 
     agent = OFFLINE_SUPERVISED(env)
     # agent.learn(1500000)
-    agent.evaluate(50000)
+    agent.evaluate(500)

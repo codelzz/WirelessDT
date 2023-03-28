@@ -864,6 +864,8 @@ Content/ShoppingMall/Materials
 Content/ShoppingMall/Meshes
 Content/ShoppingMall/Textures
 Content/ShoppingMall/Trees
+Content/Book_Manager
+Content/JewelryStorePack
 
 # ignored draw.io
 *.bkp
