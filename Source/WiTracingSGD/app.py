@@ -1,21 +1,24 @@
 import asyncio
-import settings
+from settings import DATAHUB_CONFIG, DATAGEN_CONFIG
 from datahub import DataHubService
-# from datalog import DataLogService
+from datagen import DataGenerator
+from datalog import DataLogService
 
 if __name__ == "__main__":
-    HOST, PORT = settings.DATAHUB_CONFIG['endpoint']
     # data log
-    # datalog = DataLogService()
+    datalog = DataLogService()
+    datagen = DataGenerator()
+
     # data hub
-    datahub = DataHubService(host=HOST, port=PORT)
+    datahub = DataHubService(datagen=datagen, datalog=datalog)
     datahub.debug = True
+    
 
     async def services():
         done, pending = await asyncio.wait(
             [
             datahub.task(), 
-            #datalog.task()
+            datalog.task()
             ],
             return_when=asyncio.FIRST_COMPLETED,
         )

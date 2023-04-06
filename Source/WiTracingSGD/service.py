@@ -11,17 +11,17 @@ class Service:
     async def core(self):
         self.print("[INF] starting...")
         while True:
-        	await self.do()
+            await self.do()
             
     def task(self):
-    	return asyncio.create_task(self.core())
+        return asyncio.create_task(self.core())
 
     # run as standalone
     def run(self):
         asyncio.run(self.core())
 
     def print(self, payload):
-        print(f"[{self.__class__.__name__}] {payload}")
+        print(f"{f'[{self.__class__.__name__}]':18} {payload}")
 
 if __name__ == "__main__":
     service = Service()
