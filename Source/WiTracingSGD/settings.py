@@ -6,13 +6,13 @@ DATAGEN_CONFIG = {
     'data_dir': './dataset/',
     'train_dir':'./dataset/train/',
     'eval_dir':'./dataset/eval/',
-    'mac':'20-20-00-00-00-06',
-    'rx_sample_size': 30,
+    'mac':'20-20-00-00-01-50',
+    'rx_sample_size': 20,
     'tx_sample_size': 10,
     'tx_sample_sigma': (200,200,3),
     'sleep_time': 0.1,
     'epochs':25,
-    'rss_window': 100,
+    'rss_window': 40,
 }
 
 DATALOG_CONFIG = {

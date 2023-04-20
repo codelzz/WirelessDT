@@ -16,7 +16,7 @@ ATrainingAgent::ATrainingAgent()
 void ATrainingAgent::BeginPlay()
 {
 	Super::BeginPlay();
-	InitWebSocket();
+	InitWebSocketClient();
 }
 
 void ATrainingAgent::Tick(float DeltaTime)
@@ -55,7 +55,7 @@ void ATrainingAgent::WebSocketSend()
 	//}
 }
 
-void ATrainingAgent::InitWebSocket()
+void ATrainingAgent::InitWebSocketClient()
 {
 	if (!FModuleManager::Get().IsModuleLoaded("WebSockets"))
 	{
@@ -64,9 +64,10 @@ void ATrainingAgent::InitWebSocket()
 
 	WebSocket = FWebSocketsModule::Get().CreateWebSocket(FString::Printf(TEXT("ws://%s:%d"), *Host, Port));
 
-	WebSocket->OnConnected().AddLambda([]()
+	WebSocket->OnConnected().AddLambda([this]()
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "Successful connected!");
+			this->WebSocket->Send("{\"sender\":\"UnrealEngine\"}");
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "Successful connected!");
 		});
 
 	WebSocket->OnConnectionError().AddLambda([](const FString& Error)
@@ -99,19 +100,42 @@ void ATrainingAgent::WebSocketOnMessageHandler(const FString& Message)
 	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Message);
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
-		if (FJsonObjectConverter::JsonObjectStringToUStruct(*Message, &RecvData, 0, 0)) {
-			GEngine->AddOnScreenDebugMessage(0, 15.0f, FColor::Yellow, "[RECV]" + Message);
+		FTrainingAgentRecvMetaData MetaData;
+		if (FJsonObjectConverter::JsonObjectStringToUStruct(*Message, &MetaData, 0, 0)) {
+			if (MetaData.type == "data") {
+				if (FJsonObjectConverter::JsonObjectStringToUStruct(*Message, &RecvData, 0, 0)) {
+					GEngine->AddOnScreenDebugMessage(0, 15.0f, FColor::Yellow, "[RECV]" + Message);
 
-			this->PrepareTrainStep(RecvData);
-			this->WiTracingInference();
-			this->FinalizeTrainStep();		
+					if (RecvData.type == "data") {
+						this->PrepareTrainStep(RecvData);
+						this->WiTracingInference();
+						this->FinalizeTrainStep();
+					}
+				}
+			}
+			else if (MetaData.type == "loss")
+			{
+				// handle loss
+				FTrainingAgentRecvCost RecvCost;
+				if (FJsonObjectConverter::JsonObjectStringToUStruct(*Message, &RecvCost, 0, 0)) {
+					GEngine->AddOnScreenDebugMessage(0, 15.0f, FColor::Yellow, "[RECV] Cost");
+
+					FVector Center(RecvCost.x, RecvCost.y, RecvCost.cost / 2);
+					FVector Extent(50.f, 50.f, RecvCost.cost / 2);
+					FColor Color(255, 0, 0);
+					//DrawDebugSolidBox(GetWorld(), Center, Extent, Color, true, -1.f, 0);
+					DrawDebugBox(GetWorld(), Center, Extent, Color, true, -1.f, 0, 10.f);
+
+
+				}
+			}
 		}
 	}
 }
 //--- WEBSOCKET
 void ATrainingAgent::WiTracingInference()
 {
-	if (TXs.Num() < 0 || RXs.Num() < 0)
+	if (TXs.Num() <= 0 || RXs.Num() <= 0)
 	{
 		return;
 	}
@@ -189,6 +213,7 @@ void ATrainingAgent::FinalizeTrainStep()
 	this->DestroyRXs();
 	this->DestroyTXs();
 	Labels.Empty();
+	RecvData.Empty();
 }
 
 void ATrainingAgent::SpawnRXs(const FTrainingAgentRecvData& Data)
@@ -213,7 +238,7 @@ void ATrainingAgent::SpawnRXs(const FTrainingAgentRecvData& Data)
 		RXs.Emplace(RX);
 		Labels.Add(RXName, int32(rssi));
 		RXIndices.Add(RXName, i);
-		DrawDebugPoint(GetWorld(), RX->GetActorLocation(), 5, FColor::Red, false, 0.2f, 0U);
+		DrawDebugPoint(GetWorld(), RX->GetActorLocation(), 5, FColor::Red, false, 0.5f, 0U);
 	}
 }
 
@@ -235,11 +260,11 @@ void ATrainingAgent::SpawnTXs(const FTrainingAgentRecvData& Data)
 		auto Actor = GetWorld()->SpawnActor<AWirelessTX>(AWirelessTX::StaticClass(), Location, FRotator(0), SpawnInfo);
 		AWirelessTX* TX = Cast<AWirelessTX>(Actor);
 		FString TXName = FString::Printf(TEXT("TX%d"), i);
-
+		TX->GetWirelessTXComponent()->SetPower(power);
 		TX->SetActorLabel(TXName);
 		TXs.Emplace(TX);
 		TXIndices.Add(TXName, i);
-		DrawDebugPoint(GetWorld(), TX->GetActorLocation(), 5, FColor::Green, false, 0.2f, 0U);
+		DrawDebugPoint(GetWorld(), TX->GetActorLocation(), 5, FColor::Green, true, 1.f, 0U);
 	}
 }
 

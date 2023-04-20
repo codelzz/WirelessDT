@@ -153,7 +153,7 @@ class TXEstimator:
                 return pd.concat(dfs)
             df = load()
             # calculate sample weight
-            pct = df.RSS.value_counts() / len(df)
+            pct = df.rss.value_counts() / len(df)
             # apply likelihood filter, remove 1% outliner
             lf = 1 # lf=1 not remove any outliner
             for i in range(0, len(pct)):
@@ -172,9 +172,9 @@ class TXEstimator:
     def get_sample_weights_by_labels(self, labels):
         sample_weights = self.get_sample_weights()
         weights = []
-        for RSS in labels:
-            if RSS in sample_weights.index:
-                weights.append(sample_weights[RSS])
+        for rss in labels:
+            if rss in sample_weights.index:
+                weights.append(sample_weights[rss])
             else:
                 weights.append(0)
         return weights

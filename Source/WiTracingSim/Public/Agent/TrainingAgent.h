@@ -39,16 +39,55 @@ public:
 	TArray<float> txy;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 	TArray<float> txpower;
-
+	
 	// Fitting
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 		float x;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 		float y;
-
-	//// Stage: Training 1, Evaluation 2
-	//UPROPERTY(BlueprintReadWrite, Category = "Training")
+	// Payload
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		FString type = "";
 	//	int64 stage;
+	void Empty() {
+		rxi.Empty();
+		rxx.Empty();
+		rxy.Empty();
+		rxrssi.Empty();
+
+		txi.Empty();
+		txx.Empty();
+		txy.Empty();
+		txpower.Empty();
+
+		x = 0;
+		y = 0;
+		type = "";
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FTrainingAgentRecvMetaData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		FString type = "";
+};
+
+USTRUCT(BlueprintType)
+struct FTrainingAgentRecvCost
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		float x;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		float y;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		float cost = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -63,6 +102,10 @@ public:
 		TArray<float> rxi;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 		TArray<float> rxrssi;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		FString sender = "UnrealEngine";
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		FString recipient = "Jupyter";
 	// Stage: Training 1, Evaluation 2
 	//UPROPERTY(BlueprintReadWrite, Category = "Training")
 	//	int64 stage;
@@ -103,7 +146,7 @@ public:
 
 private:
 	//--WebSocket
-	void InitWebSocket();
+	void InitWebSocketClient();
 
 	/** Handle Received Message */
 	void WebSocketOnMessageHandler(const FString& Message);

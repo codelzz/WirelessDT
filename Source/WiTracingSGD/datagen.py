@@ -38,9 +38,9 @@ class DataGenerator:
         self.pick_samples(n=n, drop=drop, replace=replace)
         if self.samples is not None:
             i = list(self.samples.index)
-            x = list(self.samples.UE_X)
-            y = list(self.samples.UE_Y)
-            rssi = list(self.samples.RSS)
+            x = list(self.samples.uex)
+            y = list(self.samples.uey)
+            rssi = list(self.samples.rss)
             return {"index":i, "x":x, "y": y, "rssi":rssi, "size": n}
         return None
     
@@ -51,7 +51,7 @@ class DataGenerator:
         if self.train_df is None:
             return 
                 
-        data = self.train_df[self.train_df.RSS > self.train_df.RSS.max() - rss_window][['UE_X','UE_Y','RSS']].to_numpy()
+        data = self.train_df[self.train_df.rss > self.train_df.rss.max() - rss_window][['uex','uey','rss']].astype(float).to_numpy()
         data[:,:2] *= 0.01 # convert x y from UE unit to meter unique
         
         def cost(state, observation):
