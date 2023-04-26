@@ -30,6 +30,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 	TArray<float> rxy;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
+	TArray<float> rxz;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
 	TArray<float> rxrssi;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 	TArray<int64> txi;
@@ -38,6 +40,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 	TArray<float> txy;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
+	TArray<float> txz;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
 	TArray<float> txpower;
 	
 	// Fitting
@@ -45,6 +49,8 @@ public:
 		float x;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 		float y;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		float z;
 	// Payload
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 		FString type = "";
@@ -53,15 +59,18 @@ public:
 		rxi.Empty();
 		rxx.Empty();
 		rxy.Empty();
+		rxz.Empty();
 		rxrssi.Empty();
 
 		txi.Empty();
 		txx.Empty();
 		txy.Empty();
+		txz.Empty();
 		txpower.Empty();
 
 		x = 0;
 		y = 0;
+		z = 0;
 		type = "";
 	}
 };
@@ -86,6 +95,8 @@ public:
 		float x;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 		float y;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		float z;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 		float cost = 0;
 };

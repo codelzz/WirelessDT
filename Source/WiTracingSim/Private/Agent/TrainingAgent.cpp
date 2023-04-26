@@ -205,7 +205,7 @@ void ATrainingAgent::PrepareTrainStep(const FTrainingAgentRecvData& Data)
 	this->SpawnRXs(RecvData);
 	this->SpawnTXs(RecvData);
 
-	DrawDebugPoint(GetWorld(), FVector(RecvData.x, RecvData.y, 100), 10, FColor::Yellow, false, 0.2f, 0U);
+	DrawDebugPoint(GetWorld(), FVector(RecvData.x, RecvData.y, RecvData.z), 10, FColor::Yellow, false, 0.2f, 0U);
 }
 
 void ATrainingAgent::FinalizeTrainStep()
@@ -226,8 +226,9 @@ void ATrainingAgent::SpawnRXs(const FTrainingAgentRecvData& Data)
 		int64 i = RecvData.rxi[Index];
 		float x = RecvData.rxx[Index];
 		float y = RecvData.rxy[Index];
+		float z = RecvData.rxz[Index];
 		float rssi = RecvData.rxrssi[Index];
-		FVector Location = FVector(x, y, 100);
+		FVector Location = FVector(x, y, z);
 
 		FActorSpawnParameters SpawnInfo;
 		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -252,8 +253,9 @@ void ATrainingAgent::SpawnTXs(const FTrainingAgentRecvData& Data)
 		int64 i = RecvData.txi[Index];
 		float x = RecvData.txx[Index];
 		float y = RecvData.txy[Index];
+		float z = RecvData.txz[Index];
 		float power = RecvData.txpower[Index];
-		FVector Location = FVector(x, y, 100);
+		FVector Location = FVector(x, y, z);
 
 		FActorSpawnParameters SpawnInfo;
 		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
