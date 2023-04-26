@@ -43,6 +43,14 @@ void AMobileSync::OnUdpServerComponentDataRecv(FString RecvData, FString& RespDa
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
 		FJsonObjectConverter::JsonObjectStringToUStruct(*RecvData, &MobileData, 0, 0);
+		if (MobileData.rxname.Num() > 0) {
+			for (int Index = 0; Index < MobileData.rxname.Num(); Index++) {
+				GEngine->AddOnScreenDebugMessage(Index, 15.0f, FColor::Green, FString::Printf(TEXT("Mobile data received! | %s %d"), *MobileData.rxname[Index], MobileData.rxrssi[Index]));
+			}
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(0, 15.0f, FColor::Green, FString::Printf(TEXT("Mobile data received! | No Beacon Detected!")));
+		}
 		bNeedSync = true;
 	} 
 	else

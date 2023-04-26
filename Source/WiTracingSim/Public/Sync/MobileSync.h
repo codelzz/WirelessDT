@@ -12,6 +12,7 @@ struct FMobileData
 	GENERATED_BODY()
 
 public:
+	// Position
 	UPROPERTY(BlueprintReadWrite, Category = "Position")
 		float x = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "Position")
@@ -26,6 +27,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Orientation")
 		float roll = 0.0f;
 
+	// BLE
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		TArray<FString> rxname;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		TArray<int64> rxrssi;
 
 	FVector GetLocation()
 	{
