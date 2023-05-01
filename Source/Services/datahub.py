@@ -72,7 +72,7 @@ class DataHubService(Service):
             for m in msg_list:
                 data = json.loads(m)
                 data = {k.lower(): v for k, v in data.items()} # convert to lower
-                if self.debug: 
+                if self.debug:
                     self.print("[DBG] <<< " + str(data))
                 results.append(data)
         except:

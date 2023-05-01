@@ -870,3 +870,4 @@ Content/JewelryStorePack
 # ignored draw.io
 *.bkp
 
+Source/WiTracingPy/checkpoints_rl/

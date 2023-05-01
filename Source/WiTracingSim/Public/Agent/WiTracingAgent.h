@@ -20,6 +20,56 @@
  *  The render result will be hold in texture render target for preview or debugging.
  */
 
+/** Camera Tracking Result */
+USTRUCT(BlueprintType)
+struct FCamTrackingResult
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "detection")
+		FString pedid;
+	UPROPERTY(BlueprintReadWrite, Category = "detection")
+		float camx = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "detection")
+		float camy = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "detection")
+		float worldx = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "detection")
+		float worldy = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "detection")
+		bool los = false;
+	UPROPERTY(BlueprintReadWrite, Category = "detection")
+		int64 timestamp = 0;
+
+};
+
+/** IMU Result */
+USTRUCT(BlueprintType)
+struct FIMUResult
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		FString imuid;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		float accx = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		float accy = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		float accz = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		float orix = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		float oriy = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		float oriz = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		int64 timestamp = 0;
+
+};
+
 /** A agent to manage WiTracing process */
 UCLASS()
 class AWiTracingAgent: public AActor
@@ -107,6 +157,13 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	void WebSocketSend(TArray<FWiTracingResult> Results);
+
+	/**
+	 * Send Result via WebSocket Client
+	 * @param Results - the Array of WiTracing result
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	void WebSocketSend2(TArray<FWiTracingResult> Results, TArray<FCamTrackingResult> CamResults, TArray<FIMUResult> IMUResults);
 	
 	/**
 	 * get all transmitter in current world
@@ -139,6 +196,13 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	const TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
+
+	/**
+	 * get current timestamp in millisecond
+	 * @return - current timestamp in millisecond
+	 */
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	int64 GetCurrentMillisecondTimestamp();
 
 private:
 	//--WebSocket

@@ -11,3 +11,9 @@ register(
      entry_point="RL.envs:RLtrackOfflineEnv",
      max_episode_steps=300,
 )
+
+register(
+     id="RL/RLfuse-v0",
+     entry_point="RL.envs:RLfuseEnv",
+     max_episode_steps=300,
+)

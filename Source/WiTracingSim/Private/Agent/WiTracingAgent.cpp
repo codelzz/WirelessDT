@@ -74,13 +74,13 @@ void AWiTracingAgent::PreviewWiTracing(TArray<AWirelessTX*> WirelessTXs, AWirele
 	UWiTracingRendererBlueprintLibrary::PreviewWiTracing(GetWorld(), TextureRenderTargetVis, WirelessTXs, WirelessRX, OctahedralProjection, bDenoised);
 }
 
+
 void AWiTracingAgent::WebSocketSend(TArray<FWiTracingResult> Results)
 {
 	if (!WebSocket->IsConnected())
 	{
 		WebSocket->Connect();
 	}
-	
 	// Send Data
 	FString Data = "";
 	for (auto Result : Results) {
@@ -92,6 +92,49 @@ void AWiTracingAgent::WebSocketSend(TArray<FWiTracingResult> Results)
 	}
 	if (Data != "" && WebSocket->IsConnected()) {
 		WebSocket->Send(Data);
+
+	}
+}
+
+void AWiTracingAgent::WebSocketSend2(TArray<FWiTracingResult> Results, TArray<FCamTrackingResult> CamResults, TArray<FIMUResult> IMUResults)
+{
+	if (!WebSocket->IsConnected())
+	{
+		WebSocket->Connect();
+	}
+	
+	// Send Data
+	FString Data = "";
+	FString CamData = "";
+	FString IMUData = "";
+	for (auto Result : Results) {
+		FString JsonData;
+		if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
+		{
+			Data += JsonData;
+		}
+	}
+
+	for (auto CamResult : CamResults) {
+		FString JsonData;
+		if (FJsonObjectConverter::UStructToJsonObjectString(CamResult, JsonData, 0, 0))
+		{
+			CamData += JsonData;
+		}
+	}
+
+	for (auto IMUResult : IMUResults) {
+		FString JsonData;
+		if (FJsonObjectConverter::UStructToJsonObjectString(IMUResult, JsonData, 0, 0))
+		{
+			IMUData += JsonData;
+		}
+
+	}
+	if (Data != "" && WebSocket->IsConnected()) {
+		WebSocket->Send(Data);
+		WebSocket->Send(CamData);
+		WebSocket->Send(IMUData);
 	}
 }
 
@@ -125,6 +168,13 @@ const TArray<AWirelessTX*> AWiTracingAgent::GetTXsOutRange(FVector Origin, float
 		}
 	}
 	return InRangeTXs;
+}
+
+int64 AWiTracingAgent::GetCurrentMillisecondTimestamp()
+{
+	int64 Second = (int64)FDateTime::UtcNow().ToUnixTimestamp() * 1000;
+	int64 Millisecond = FDateTime::UtcNow().GetMillisecond();
+	return Second + Millisecond;
 }
 
 //--- WEBSOCKET
