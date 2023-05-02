@@ -33,7 +33,7 @@ class RLfuseEnv(gym.Env):
         self.timestamp_length = 50
         self.imu_target = 'BP_TargetAI_C_0'
         imu_space = gym.spaces.Box(low=-10.0, high=10.0, shape=(self.timestamp_length, 6), dtype=np.float32)
-        visual_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(self.timestamp_length, self.max_pedestrian_detections * 2), dtype=np.float32)
+        visual_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(self.timestamp_length, self.max_pedestrian_detections, 2), dtype=np.float32)
 
         self.observation_space = gym.spaces.Tuple((imu_space, visual_space))
         self.action_space = gym.spaces.Discrete(self.max_pedestrian_detections)
@@ -89,28 +89,71 @@ class RLfuseEnv(gym.Env):
     def shuffle_data(self, df):
         return df.sample(frac=1).reset_index(drop=True)
 
+    # def _get_obs(self, curr_timestamp_idx):
+    #     label_list = []
+    #     x_list = []
+    #     y_list = []
+    #     imu_list = []
+    #
+    #     for i in range(curr_timestamp_idx, curr_timestamp_idx + self.timestamp_length):
+    #         cam_ts = self.cam_unique_timestamps[i]
+    #         vis_data = self.cam_df[self.cam_df['timestamp'] == cam_ts]
+    #         vis_data = vis_data[vis_data['los'] == True]
+    #
+    #         # vis_data = self.shuffle_data(vis_data)
+    #
+    #         label_list.append(vis_data['Ped_ID'].tolist())
+    #
+    #         xl = vis_data['x'].tolist()
+    #         xl += [0.0] * (self.max_pedestrian_detections - len(xl))
+    #         x_list.append(xl)
+    #         yl = vis_data['y'].tolist()
+    #         yl += [0.0] * (self.max_pedestrian_detections - len(yl))
+    #         y_list.append(yl)
+    #
+    #         imu_ts = self.imu_unique_timestamps[i]
+    #         imu_data = self.imu_df[self.imu_df['timestamp'] == imu_ts]
+    #         imu_list.append([imu_data['acceleration_x'].tolist()[0],
+    #                          imu_data['acceleration_y'].tolist()[0],
+    #                          imu_data['acceleration_z'].tolist()[0],
+    #                          imu_data['orientation_x'].tolist()[0],
+    #                          imu_data['orientation_y'].tolist()[0],
+    #                          imu_data['orientation_z'].tolist()[0]])
+    #     vis_list = np.concatenate([x_list, y_list], axis=1).tolist()
+    #
+    #     imu_list = np.asarray(imu_list, dtype=np.float32)
+    #     vis_list = np.asarray(vis_list, dtype=np.float32)
+    #     self.label_list = label_list
+    #
+    #     return vis_list, imu_list, label_list
+
     def _get_obs(self, curr_timestamp_idx):
         label_list = []
         x_list = []
         y_list = []
         imu_list = []
+        vis_lists = []
 
         for i in range(curr_timestamp_idx, curr_timestamp_idx + self.timestamp_length):
             cam_ts = self.cam_unique_timestamps[i]
             vis_data = self.cam_df[self.cam_df['timestamp'] == cam_ts]
             vis_data = vis_data[vis_data['los'] == True]
 
-            vis_data = self.shuffle_data(vis_data)
+            # vis_data = self.shuffle_data(vis_data)
 
             label_list.append(vis_data['Ped_ID'].tolist())
 
             xl = vis_data['x'].tolist()
             xl += [0.0] * (self.max_pedestrian_detections - len(xl))
-            x_list.append(xl)
+            xl = np.array(xl).reshape(-1, 1)
+            # x_list.append(xl)
             yl = vis_data['y'].tolist()
             yl += [0.0] * (self.max_pedestrian_detections - len(yl))
-            y_list.append(yl)
+            yl = np.array(yl).reshape(-1, 1)
+            # y_list.append(yl)
 
+            vis_list = np.hstack((xl,yl))
+            vis_lists.append(vis_list)
             imu_ts = self.imu_unique_timestamps[i]
             imu_data = self.imu_df[self.imu_df['timestamp'] == imu_ts]
             imu_list.append([imu_data['acceleration_x'].tolist()[0],
@@ -119,13 +162,13 @@ class RLfuseEnv(gym.Env):
                              imu_data['orientation_x'].tolist()[0],
                              imu_data['orientation_y'].tolist()[0],
                              imu_data['orientation_z'].tolist()[0]])
-        vis_list = np.concatenate([x_list, y_list], axis=1).tolist()
+        # vis_list = np.concatenate([x_list, y_list], axis=1).tolist()
 
         imu_list = np.asarray(imu_list, dtype=np.float32)
-        vis_list = np.asarray(vis_list, dtype=np.float32)
+        vis_lists = np.asarray(vis_lists, dtype=np.float32)
         self.label_list = label_list
 
-        return vis_list, imu_list, label_list
+        return vis_lists, imu_list, label_list
 
     def reset(self, seed=None, options=None):
         self.curr_timestamp_idx = random.randint(0, 100)

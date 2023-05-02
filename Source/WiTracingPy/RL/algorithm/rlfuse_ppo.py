@@ -1,4 +1,5 @@
 from RL.agent.fusion_model import FusionModel
+from RL.agent.fusion_model_v2 import FusionModelv2
 from torch.distributions import MultivariateNormal
 import torch
 from torch.optim import Adam
@@ -18,8 +19,8 @@ class Rlfuse_ppo:
 
         # ALG STEP 1
         # Initialize actor and critic networks
-        self.actor = FusionModel(imu_feature_size=32, visual_feature_size=32, lstm_hidden_size=64, max_pedestrian_detections=10, num_classes=10)
-        self.critic = FusionModel(imu_feature_size=32, visual_feature_size=32, lstm_hidden_size=64, max_pedestrian_detections=10, num_classes=1)
+        self.actor = FusionModelv2(imu_feature_size=32, visual_feature_size=32, lstm_hidden_size=64, max_pedestrian_detections=10, num_classes=10)
+        self.critic = FusionModelv2(imu_feature_size=32, visual_feature_size=32, lstm_hidden_size=64, max_pedestrian_detections=10, num_classes=10)
         if self.load_weight:
             self.actor.load_state_dict(torch.load('./fuse_ppo_actor.pth'))
             self.actor.eval()
@@ -30,7 +31,7 @@ class Rlfuse_ppo:
 
         # Create our variable for the matrix.
         # Note that I chose 0.5 for stdev arbitrarily.
-        self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.01)
+        self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.05)
 
         # Create the covariance matrix
         self.cov_mat = torch.diag(self.cov_var)
@@ -58,7 +59,7 @@ class Rlfuse_ppo:
             return action
 
     def get_action(self, obs):
-        mean = self.actor(obs)
+        mean, _ = self.actor(obs)
         # Create our Multivariate Normal Distribution
         dist = MultivariateNormal(mean, self.cov_mat)
         # Sample an action from the distribution and get its log prob
@@ -163,10 +164,10 @@ class Rlfuse_ppo:
             batch_obs_vis = torch.tensor(batch_obs_vis, dtype=torch.float)
             batch_obs = (batch_obs_imu, batch_obs_vis)
 
-            batch_acts = np.concatenate(batch_acts, axis=1)
+            batch_acts = np.concatenate(batch_acts, axis=0)
             batch_acts = torch.tensor(batch_acts, dtype=torch.float)
 
-            batch_log_probs = np.concatenate(batch_log_probs, axis=1)
+            batch_log_probs = np.concatenate(batch_log_probs, axis=0)
             batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float)
             # ALG STEP #4
             batch_rtgs = self.compute_rtgs(batch_rews)
@@ -175,12 +176,12 @@ class Rlfuse_ppo:
 
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs.
-        V = self.critic(batch_obs).squeeze()
-
+        _, V = self.critic(batch_obs)
+        V = V.squeeze()
         # Calculate the log probabilities of batch actions using most
         # recent actor network.
         # This segment of code is similar to that in get_action()
-        mean = self.actor(batch_obs)
+        mean, _ = self.actor(batch_obs)
         dist = MultivariateNormal(mean, self.cov_mat)
         log_probs = dist.log_prob(batch_acts)
         # Return predicted values V and log probs log_probs
@@ -203,7 +204,7 @@ class Rlfuse_ppo:
             # Calculate how many timesteps we collected this batch
             t_so_far += np.sum(batch_lens)
             batch_rtgs_copy = torch.clone(batch_rtgs).detach().numpy()
-            batch_rtgs = batch_rtgs[0].T
+            batch_rtgs = batch_rtgs[0]
 
             rtg_sum = np.sum(batch_rtgs_copy)
             print(rtg_sum)
