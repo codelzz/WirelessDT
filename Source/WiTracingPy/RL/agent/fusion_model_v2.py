@@ -5,6 +5,19 @@ import torch.nn as nn
 class FusionModelv2(nn.Module):
     def __init__(self, imu_feature_size, visual_feature_size, lstm_hidden_size, max_pedestrian_detections, num_classes):
         super(FusionModelv2, self).__init__()
+        # Wifi encoder
+        # tokenizer.vocab_size = 28996
+        # embedding_dim = 16
+        # hidden_size = 64
+        self.embedding_layer = nn.Embedding(256, 8)
+        # self.rssi_embedding_layer = nn.Embedding(256, embedding_dim)
+        # Define the LSTM layer
+        wifi_feature_size = 64
+        self.wifi_encoder = nn.LSTM(input_size=2 * 8 * 20,
+                                             hidden_size=wifi_feature_size,
+                                             num_layers=1,
+                                             batch_first=True)
+
 
         # Feature extraction layers for IMU data
         self.imu_feature_extractor = nn.LSTM(input_size=6,
@@ -26,7 +39,7 @@ class FusionModelv2(nn.Module):
 
         # Fully connected layer to learn the similarity metric
         self.matching_layer = nn.Sequential(
-            nn.Linear(imu_feature_size + visual_feature_size, 32),
+            nn.Linear(wifi_feature_size + imu_feature_size + visual_feature_size, 32),
             nn.ReLU(),
             nn.Linear(32, 1)
         )
@@ -39,7 +52,15 @@ class FusionModelv2(nn.Module):
         # self.sigmoid = nn.Sigmoid()
 
     def forward(self, obs):
-        imu_data, visual_data = obs
+        wifi_name, wifi_rssi, imu_data, visual_data = obs
+        # Wifi Encoder
+        wifi_name_embedding = self.embedding_layer(wifi_name)
+        wifi_rssi_embedding = self.embedding_layer(wifi_rssi)
+        wifi_input = torch.cat((wifi_name_embedding, wifi_rssi_embedding), dim=-1)
+        batch_size, time_steps, _, _ = visual_data.shape
+        wifi_input = wifi_input.view(batch_size, time_steps, -1)
+        wifi_features, _ = self.wifi_encoder(wifi_input)
+
         # Extract features from IMU data
         imu_features, _ = self.imu_feature_extractor(imu_data)
 
@@ -57,14 +78,15 @@ class FusionModelv2(nn.Module):
         visual_features = visual_features.view(batch_size, num_tracklets, time_steps, -1).permute(0, 2, 1,
                                                                                                   3).contiguous()
 
-        # Expand imu_features to match the shape of visual_features
+        # Expand imu_features and wifi_features to match the shape of visual_features
+        wifi_features = wifi_features.unsqueeze(2).expand(-1, -1, num_tracklets, -1)
         imu_features_expanded = imu_features.unsqueeze(2).expand(-1, -1, num_tracklets, -1)
 
         # Concatenate imu_features_expanded and visual_features
-        combined_features = torch.cat((imu_features_expanded, visual_features), dim=-1)
+        combined_features = torch.cat((wifi_features, imu_features_expanded, visual_features), dim=-1)
 
         # Reshape combined_features to (-1, imu_feature_size + visual_feature_size)
-        combined_features = combined_features.view(-1, imu_features.shape[-1] + visual_features.shape[-1])
+        combined_features = combined_features.view(-1, wifi_features.shape[-1] + imu_features.shape[-1] + visual_features.shape[-1])
 
         # Compute similarity scores
         similarity_scores = self.matching_layer(combined_features)

@@ -11,7 +11,7 @@ import time
 from matplotlib import pyplot as plt
 
 class Rlfuse_ppo:
-    def __init__(self, env, load_weight=False):
+    def __init__(self, env, fill_value=0.01, lr=0.005, load_weight=False):
         self.env = env
         self.load_weight = load_weight
         # self.obs_dim = env.observation_space["TXs"].shape[0]
@@ -27,11 +27,11 @@ class Rlfuse_ppo:
             self.critic.load_state_dict(torch.load('./fuse_ppo_critic.pth'))
             self.critic.eval()
 
-        self._init_hyperparameters()
+        self._init_hyperparameters(lr=lr)
 
         # Create our variable for the matrix.
         # Note that I chose 0.5 for stdev arbitrarily.
-        self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.05)
+        self.cov_var = torch.full(size=(self.act_dim,), fill_value=fill_value)
 
         # Create the covariance matrix
         self.cov_mat = torch.diag(self.cov_var)
@@ -42,19 +42,19 @@ class Rlfuse_ppo:
         self.save_rate = 500
         self.timestep_length = 50
 
-    def _init_hyperparameters(self):
+    def _init_hyperparameters(self, lr):
         # Default values for hyperparameters, will need to change later.
         self.timesteps_per_batch = 480  # timesteps per batch
         self.max_timesteps_per_episode = 160  # timesteps per episode
         self.gamma = 0.95
         self.n_updates_per_iteration = 5
         self.clip = 0.2  # As recommended by the paper
-        self.lr = 0.005
+        self.lr = lr
 
     def evaluate_action(self, obs):
         with torch.no_grad():
-            imu_list, vis_list = self.process_obs(obs)
-            obs = (imu_list, vis_list)
+            wifi_name_lists, wifi_rssi_lists, imu_list, vis_list = self.process_obs(obs)
+            obs = (wifi_name_lists, wifi_rssi_lists, imu_list, vis_list)
             action, _ = self.get_action(obs)
             return action
 
@@ -69,10 +69,12 @@ class Rlfuse_ppo:
         return action.detach().numpy(), log_prob.detach()
 
     def process_obs(self, obs):
-        imu_list, vis_list = obs
+        wifi_name_lists, wifi_rssi_lists, imu_list, vis_list = obs
         imu_list = torch.from_numpy(imu_list).float().unsqueeze(0)
         vis_list = torch.from_numpy(vis_list).float().unsqueeze(0)
-        return imu_list, vis_list
+        wifi_name_lists = torch.from_numpy(wifi_name_lists).unsqueeze(0)
+        wifi_rssi_lists = torch.from_numpy(wifi_rssi_lists).unsqueeze(0)
+        return wifi_name_lists, wifi_rssi_lists, imu_list, vis_list
 
     # def compute_rtgs(self, batch_rews):
     #     # The rewards-to-go (rtg) per episode per batch to return.
@@ -115,6 +117,9 @@ class Rlfuse_ppo:
         # Batch data
         batch_obs_imu = []  # batch observations
         batch_obs_vis = []
+        batch_obs_wifi_name = []
+        batch_obs_wifi_rssi = []
+
         batch_acts = []  # batch actions
         batch_log_probs = []  # log probs of each action
         batch_rews = []  # batch rewards
@@ -135,10 +140,13 @@ class Rlfuse_ppo:
                 # Increment timesteps ran this batch so far
                 t += 1
                 # Collect observation
-                imu_list, vis_list = self.process_obs(obs)
+                wifi_name_lists, wifi_rssi_lists, imu_list, vis_list = self.process_obs(obs)
                 batch_obs_imu.append(imu_list)
                 batch_obs_vis.append(vis_list)
-                obs = (imu_list, vis_list)
+                batch_obs_wifi_name.append(wifi_name_lists)
+                batch_obs_wifi_rssi.append(wifi_rssi_lists)
+
+                obs = (wifi_name_lists, wifi_rssi_lists, imu_list, vis_list)
                 action, log_prob = self.get_action(obs)
                 # obs, rew, done, _ = self.env.step(action)
                 obs, rew, terminated, truncated, _ = self.env.step(action)
@@ -162,7 +170,11 @@ class Rlfuse_ppo:
             batch_obs_imu = torch.tensor(batch_obs_imu, dtype=torch.float)
             batch_obs_vis = np.vstack(batch_obs_vis)
             batch_obs_vis = torch.tensor(batch_obs_vis, dtype=torch.float)
-            batch_obs = (batch_obs_imu, batch_obs_vis)
+            batch_obs_wifi_name = np.vstack(batch_obs_wifi_name)
+            batch_obs_wifi_name = torch.tensor(batch_obs_wifi_name, dtype=torch.int32)
+            batch_obs_wifi_rssi = np.vstack(batch_obs_wifi_rssi)
+            batch_obs_wifi_rssi = torch.tensor(batch_obs_wifi_rssi, dtype=torch.int32)
+            batch_obs = (batch_obs_wifi_name, batch_obs_wifi_rssi, batch_obs_imu, batch_obs_vis)
 
             batch_acts = np.concatenate(batch_acts, axis=0)
             batch_acts = torch.tensor(batch_acts, dtype=torch.float)

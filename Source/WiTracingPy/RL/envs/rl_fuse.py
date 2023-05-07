@@ -25,6 +25,10 @@ class RLfuseEnv(gym.Env):
         self.wifi_df = pd.DataFrame()
         self.cam_unique_timestamps = []
         self.imu_unique_timestamps = []
+        self.wifi_unique_timestamps = []
+        self.wifi_unique_names = []
+
+        self.tokenizer = torch.hub.load('huggingface/pytorch-transformers', 'tokenizer', 'bert-base-cased')
 
         # reward related
         self.label_list = []
@@ -33,9 +37,13 @@ class RLfuseEnv(gym.Env):
         self.timestamp_length = 50
         self.imu_target = 'BP_TargetAI_C_0'
         imu_space = gym.spaces.Box(low=-10.0, high=10.0, shape=(self.timestamp_length, 6), dtype=np.float32)
-        visual_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(self.timestamp_length, self.max_pedestrian_detections, 2), dtype=np.float32)
+        visual_space = gym.spaces.Box(low=-1.0, high=1.0,
+                                      shape=(self.timestamp_length, self.max_pedestrian_detections, 2),
+                                      dtype=np.float32)
+        wifi_name_space = gym.spaces.Box(low=0, high=1000, shape=(self.timestamp_length, 20), dtype=np.int32)
+        wifi_rssi_space = gym.spaces.Box(low=0, high=255, shape=(self.timestamp_length, 20), dtype=np.int32)
 
-        self.observation_space = gym.spaces.Tuple((imu_space, visual_space))
+        self.observation_space = gym.spaces.Tuple((wifi_name_space, wifi_rssi_space, imu_space, visual_space))
         self.action_space = gym.spaces.Discrete(self.max_pedestrian_detections)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -50,16 +58,62 @@ class RLfuseEnv(gym.Env):
 
         self.cam_unique_timestamps = self.cam_df['timestamp'].drop_duplicates().tolist()
         self.imu_unique_timestamps = self.imu_df['timestamp'].drop_duplicates().tolist()
+        self.wifi_unique_timestamps = self.wifi_df['timestamp'].drop_duplicates().tolist()
+        self.wifi_unique_names = self.wifi_df['tx'].drop_duplicates().tolist()
+        self.wifi_unique_names.append('N/A')
 
         # First, create a copy of the sliced DataFrame
         self.imu_df = self.imu_df.copy()
+        self.wifi_df = self.wifi_df.copy()
 
-        self.imu_df.loc[:, 'acceleration_x'] = (self.imu_df.loc[:, 'acceleration_x'] - self.imu_df.loc[:, 'acceleration_x'].mean()) / \
-                                        self.imu_df.loc[:, 'acceleration_x'].std()
-        self.imu_df.loc[:, 'acceleration_y'] = (self.imu_df.loc[:, 'acceleration_y'] - self.imu_df.loc[:, 'acceleration_y'].mean()) / \
-                                        self.imu_df.loc[:, 'acceleration_y'].std()
-        self.imu_df.loc[:, 'orientation_z'] = (self.imu_df.loc[:, 'orientation_z'] - self.imu_df.loc[:, 'orientation_z'].mean()) / \
-                                        self.imu_df.loc[:, 'orientation_z'].std()
+        def tolist(df):
+            return df.tolist()
+
+        def pad_list(rssi_list, target_length=20, padding_value=-255):
+            padded_list = rssi_list.copy()
+            while len(padded_list) < target_length:
+                padded_list.append(padding_value)
+            padded_list = padded_list[:20]
+            return padded_list
+
+        self.wifi_df = self.wifi_df.groupby(['timestamp', 'x', 'y', 'z'])[['rssi', 'tx']].agg(tolist).reset_index()
+        # Get the TXName string from the data
+        for idx, _ in self.wifi_df.iterrows():
+            tx_names = self.wifi_df.iloc[idx]['tx']
+            tx_rssis = self.wifi_df.iloc[idx]['rssi']
+
+            # Pad each string with spaces to make them have equal length
+            # padded_tx_names = [s.ljust(self.pad_length, self.pad_value) for s in tx_names]
+            padded_tx_rssis = pad_list(tx_rssis)
+
+            while len(tx_names) < 20:
+                tx_names.append('N/A')
+            if len(tx_names) >= 20:
+                tx_names = tx_names[:20]
+            tx_names = ' '.join(tx_names)
+
+            self.wifi_df.at[idx, 'rssi'] = padded_tx_rssis
+
+            # tx_name_ids = torch.tensor(
+            #     self.tokenizer.encode(tx_names, padding='max_length', max_length=1024, add_special_tokens=True))
+
+            # Create a dictionary to map each name to its index in self.wifi_unique_names
+            name_to_index = {name: index for index, name in enumerate(self.wifi_unique_names)}
+            # Iterate through the DataFrame and convert the concatenated names into a list of indexes
+            names = self.wifi_df.iloc[idx]['tx']
+            index_list = [name_to_index[name] for name in names if name in name_to_index]
+            self.wifi_df.at[idx, 'tx'] = index_list
+            # self.wifi_df.at[idx, 'tx'] = tx_name_ids.tolist()
+
+        self.imu_df.loc[:, 'acceleration_x'] = (self.imu_df.loc[:, 'acceleration_x'] - self.imu_df.loc[:,
+                                                                                       'acceleration_x'].mean()) / \
+                                               self.imu_df.loc[:, 'acceleration_x'].std()
+        self.imu_df.loc[:, 'acceleration_y'] = (self.imu_df.loc[:, 'acceleration_y'] - self.imu_df.loc[:,
+                                                                                       'acceleration_y'].mean()) / \
+                                               self.imu_df.loc[:, 'acceleration_y'].std()
+        self.imu_df.loc[:, 'orientation_z'] = (self.imu_df.loc[:, 'orientation_z'] - self.imu_df.loc[:,
+                                                                                     'orientation_z'].mean()) / \
+                                              self.imu_df.loc[:, 'orientation_z'].std()
 
     def find_target_label(self, matrix, target):
         positions = []
@@ -133,11 +187,30 @@ class RLfuseEnv(gym.Env):
         y_list = []
         imu_list = []
         vis_lists = []
+        wifi_name_lists = []
+        wifi_rssi_lists = []
+
+        cam_ts = self.cam_unique_timestamps[curr_timestamp_idx]
+        vis_data = self.cam_df[self.cam_df['timestamp'] == cam_ts]
+        vis_data = vis_data[vis_data['los'] == True]
+        if vis_data.shape[0] >= 6:
+            target_row = random.randint(0, 3)
+        else:
+            target_row = 0
 
         for i in range(curr_timestamp_idx, curr_timestamp_idx + self.timestamp_length):
             cam_ts = self.cam_unique_timestamps[i]
+            wifi_ts = self.wifi_unique_timestamps[i]
+
             vis_data = self.cam_df[self.cam_df['timestamp'] == cam_ts]
             vis_data = vis_data[vis_data['los'] == True]
+
+            def swap_rows(df, row1, row2):
+                df.iloc[row1], df.iloc[row2] = df.iloc[row2].copy(), df.iloc[row1].copy()
+                return df
+            # TODO Not perfect way to conditionly swap rows
+            if target_row != 0 and target_row < len(vis_data):
+                vis_data = swap_rows(vis_data, 0, target_row)
 
             # vis_data = self.shuffle_data(vis_data)
 
@@ -152,7 +225,7 @@ class RLfuseEnv(gym.Env):
             yl = np.array(yl).reshape(-1, 1)
             # y_list.append(yl)
 
-            vis_list = np.hstack((xl,yl))
+            vis_list = np.hstack((xl, yl))
             vis_lists.append(vis_list)
             imu_ts = self.imu_unique_timestamps[i]
             imu_data = self.imu_df[self.imu_df['timestamp'] == imu_ts]
@@ -162,19 +235,29 @@ class RLfuseEnv(gym.Env):
                              imu_data['orientation_x'].tolist()[0],
                              imu_data['orientation_y'].tolist()[0],
                              imu_data['orientation_z'].tolist()[0]])
+
+            wifi_data = self.wifi_df[self.wifi_df['timestamp'] == wifi_ts]
+            wifi_name = wifi_data['tx'].tolist()[0]
+            wifi_rssi = wifi_data['rssi'].tolist()[0]
+
+            wifi_name_lists.append(wifi_name)
+            wifi_rssi_lists.append(wifi_rssi)
         # vis_list = np.concatenate([x_list, y_list], axis=1).tolist()
 
         imu_list = np.asarray(imu_list, dtype=np.float32)
         vis_lists = np.asarray(vis_lists, dtype=np.float32)
+        wifi_name_lists = np.asarray(wifi_name_lists, dtype=np.int32)
+        wifi_rssi_lists = np.abs(np.asarray(wifi_rssi_lists, dtype=np.int32))
+
         self.label_list = label_list
 
-        return vis_lists, imu_list, label_list
+        return wifi_name_lists , wifi_rssi_lists, vis_lists, imu_list, label_list
 
     def reset(self, seed=None, options=None):
         self.curr_timestamp_idx = random.randint(0, 100)
-        vis_list, imu_list, label_list = self._get_obs(self.curr_timestamp_idx)
+        wifi_name_lists , wifi_rssi_lists, vis_list, imu_list, label_list = self._get_obs(self.curr_timestamp_idx)
 
-        obs = (imu_list, vis_list)
+        obs = (wifi_name_lists , wifi_rssi_lists, imu_list, vis_list)
         info = {
             "label": label_list
         }
@@ -196,9 +279,9 @@ class RLfuseEnv(gym.Env):
         truncated = False
 
         self.curr_timestamp_idx += 1
-        vis_list, imu_list, label_list = self._get_obs(self.curr_timestamp_idx)
+        wifi_name_lists , wifi_rssi_lists, vis_list, imu_list, label_list = self._get_obs(self.curr_timestamp_idx)
 
-        observation = (imu_list, vis_list)
+        observation = (wifi_name_lists , wifi_rssi_lists, imu_list, vis_list)
         info = {
             "label": label_list
         }
@@ -209,8 +292,8 @@ class RLfuseEnv(gym.Env):
         return observation, reward, terminated, truncated, info
 
     def get_evaluate_obs(self, timestep_idx):
-        vis_list, imu_list, label_list = self._get_obs(timestep_idx)
-        obs = (imu_list, vis_list)
+        wifi_name_lists , wifi_rssi_lists, vis_list, imu_list, label_list = self._get_obs(timestep_idx)
+        obs = (wifi_name_lists , wifi_rssi_lists, imu_list, vis_list)
         info = {
             "label": label_list
         }
@@ -227,6 +310,7 @@ class RLfuseEnv(gym.Env):
         modified_indices_list = modified_indices.tolist()
         reward = self.get_reward(modified_indices_list)
         return modified_indices_list, reward
+
     def render(self):
         pass
 

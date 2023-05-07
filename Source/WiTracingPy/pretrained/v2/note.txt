@@ -1,0 +1,1 @@
+54000 time step， v2， works for shuffled input, simple dataset
