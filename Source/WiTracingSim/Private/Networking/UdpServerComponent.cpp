@@ -6,6 +6,7 @@ FUdpServer::FUdpServer(const FString Host, const uint16 Port)
 	: SocketSubSystem(ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM))
 	, Delegate(nullptr)
 {
+	FIPv4Endpoint::Initialize();
 	FIPv4Address IPAddress;
 	FIPv4Address::Parse(Host, IPAddress);
 	Endpoint = FIPv4Endpoint(IPAddress, Port);

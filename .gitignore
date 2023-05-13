@@ -865,3 +865,7 @@ Content/ShoppingMall/Materials
 Content/ShoppingMall/Meshes
 Content/ShoppingMall/Textures
 Content/ShoppingMall/Trees
+
+# Ingore some demo office assets
+Content/Buildings/Buildings/Meshes
+Content/Libs

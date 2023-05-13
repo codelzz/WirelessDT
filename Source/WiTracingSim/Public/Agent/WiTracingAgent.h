@@ -139,12 +139,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WiTracing")
 	const TArray<AWirelessTX*> GetTXsOutRange(FVector Origin, float Radius);
 
+	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	void CacheTXs();
+
 private:
 	/** initialize render target for saving WiTracing result */
 	void InitRenderTargets();
 
 	/** cache all the transmitters in the world */
-	void CacheTXs();
+	// void CacheTXs();
 
 	/** cache all the transmitters in the world */
 	void CacheRXs();
