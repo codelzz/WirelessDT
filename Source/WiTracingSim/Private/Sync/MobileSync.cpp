@@ -29,7 +29,7 @@ void AMobileSync::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (bNeedSync)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s, %s"), *MobileData.GetLocation().ToString(), *MobileData.GetRotator().ToString());
+		GEngine->AddOnScreenDebugMessage(100, 15.0f, FColor::Green, FString::Printf(TEXT(" Location | %s, %s"), *MobileData.GetLocation().ToString(), *MobileData.GetRotator().ToString()));
 		bNeedSync = false;
 		SetActorLocationAndRotation(MobileData.GetLocation(), MobileData.GetRotator(), false, 0, ETeleportType::ResetPhysics);
 	}
