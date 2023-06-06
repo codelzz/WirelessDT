@@ -1,0 +1,1 @@
+50000 steps. 0.5 matching accuracy for all time length. works for shuffled data.

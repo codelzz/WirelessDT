@@ -5,6 +5,7 @@ from torch.optim import Adam
 from torch import nn
 import numpy as np
 import gymnasium as gym
+import matplotlib.pyplot as plt
 
 class PPO:
     def __init__(self, env):
@@ -120,6 +121,7 @@ class PPO:
             return batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens
 
     def learn(self, total_timesteps):
+        batch_rtgs_list = []
         t_so_far = 0  # Timesteps simulated so far
         while t_so_far < total_timesteps:
             print("Learning at timestep ", t_so_far)
@@ -129,6 +131,7 @@ class PPO:
             t_so_far += np.sum(batch_lens)
             batch_rtgs_copy = torch.clone(batch_rtgs).detach().numpy()
             print(np.sum(batch_rtgs_copy))
+            batch_rtgs_list.append(np.sum(batch_rtgs_copy))
 
             # Calculate V_phi and pi_theta(a_t | s_t)
             V, curr_log_probs = self.evaluate(batch_obs, batch_acts)
@@ -165,6 +168,13 @@ class PPO:
                 critic_loss.backward()
                 self.critic_optim.step()
 
+        # Create a new figure
+        plt.figure()
+        # Plot the values
+        plt.plot(batch_rtgs_list)
+        # Show the plot
+        plt.show()
+
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs.
         V = self.critic(batch_obs).squeeze()
@@ -182,4 +192,4 @@ class PPO:
 if __name__ == "__main__":
     env = gym.make('Pendulum-v1')
     model = PPO(env)
-    model.learn(50000)
+    model.learn(500000)

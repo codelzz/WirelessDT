@@ -1,9 +1,13 @@
 import torch
 import torch.nn as nn
 
+'''
 
+Fusion model v2. Input with 3 LSTM feature extractor and transformer as the fusing layer
+
+'''
 class FusionModelv2(nn.Module):
-    def __init__(self, imu_feature_size, visual_feature_size, lstm_hidden_size, max_pedestrian_detections, num_classes):
+    def __init__(self, wifi_feature_size, imu_feature_size, visual_feature_size, lstm_hidden_size, max_pedestrian_detections, num_classes):
         super(FusionModelv2, self).__init__()
         # Wifi encoder
         # tokenizer.vocab_size = 28996
@@ -12,7 +16,6 @@ class FusionModelv2(nn.Module):
         self.embedding_layer = nn.Embedding(256, 8)
         # self.rssi_embedding_layer = nn.Embedding(256, embedding_dim)
         # Define the LSTM layer
-        wifi_feature_size = 64
         self.wifi_encoder = nn.LSTM(input_size=2 * 8 * 20,
                                              hidden_size=wifi_feature_size,
                                              num_layers=1,
@@ -31,15 +34,17 @@ class FusionModelv2(nn.Module):
                                                 num_layers=1,
                                                 batch_first=True)
 
-        # LSTM layer for capturing temporal dependencies
-        self.lstm = nn.LSTM(input_size=imu_feature_size + max_pedestrian_detections * visual_feature_size,
-                            hidden_size=lstm_hidden_size,
-                            num_layers=1,
-                            batch_first=True)
+        self.attention_matching_module = nn.Transformer(d_model=64, nhead=1, num_encoder_layers=1, num_decoder_layers=1, dim_feedforward=64)
 
-        # Fully connected layer to learn the similarity metric
+        # # LSTM layer for capturing temporal dependencies
+        # self.lstm = nn.LSTM(input_size=imu_feature_size + max_pedestrian_detections * visual_feature_size,
+        #                     hidden_size=lstm_hidden_size,
+        #                     num_layers=1,
+        #                     batch_first=True)
+        #
+        # # Fully connected layer to learn the similarity metric
         self.matching_layer = nn.Sequential(
-            nn.Linear(wifi_feature_size + imu_feature_size + visual_feature_size, 32),
+            nn.Linear(visual_feature_size, 32),
             nn.ReLU(),
             nn.Linear(32, 1)
         )
@@ -83,13 +88,21 @@ class FusionModelv2(nn.Module):
         imu_features_expanded = imu_features.unsqueeze(2).expand(-1, -1, num_tracklets, -1)
 
         # Concatenate imu_features_expanded and visual_features
-        combined_features = torch.cat((wifi_features, imu_features_expanded, visual_features), dim=-1)
+        combined_features = torch.cat((wifi_features, imu_features_expanded), dim=-1)
 
-        # Reshape combined_features to (-1, imu_feature_size + visual_feature_size)
-        combined_features = combined_features.view(-1, wifi_features.shape[-1] + imu_features.shape[-1] + visual_features.shape[-1])
+        # begin the transformer part
+        batch_size, time_steps, num_tracklets, feature_size = combined_features.shape
+        combined_features = combined_features.permute(1, 0, 2, 3)
+        combined_features = combined_features.reshape(time_steps, batch_size * num_tracklets, feature_size)
+        visual_features = visual_features.permute(1, 0, 2, 3)
+        visual_features = visual_features.reshape(time_steps, batch_size * num_tracklets, feature_size)
+
+        out_feature = self.attention_matching_module(combined_features, visual_features)
+
+        out_feature = out_feature.view(-1, out_feature.shape[-1])
 
         # Compute similarity scores
-        similarity_scores = self.matching_layer(combined_features)
+        similarity_scores = self.matching_layer(out_feature)
 
         # Reshape similarity_scores back to (batch_size, time_steps, num_tracklets)
         similarity_scores = similarity_scores.view(batch_size, time_steps, num_tracklets)
@@ -107,6 +120,29 @@ class FusionModelv2(nn.Module):
         critic_output = flattened_critic_output.view(batch_size, time_steps, 1)
 
         return matching_probs, critic_output
+
+        # Reshape combined_features to (-1, imu_feature_size + visual_feature_size)
+        # combined_features = combined_features.view(-1, wifi_features.shape[-1] + imu_features.shape[-1] + visual_features.shape[-1])
+        #
+        # # Compute similarity scores
+        # similarity_scores = self.matching_layer(combined_features)
+        #
+        # # Reshape similarity_scores back to (batch_size, time_steps, num_tracklets)
+        # similarity_scores = similarity_scores.view(batch_size, time_steps, num_tracklets)
+        #
+        # # Compute matching probabilities using softmax
+        # matching_probs = torch.softmax(similarity_scores, dim=-1)
+        #
+        # # Flatten the matching_probs tensor
+        # flattened_matching_probs = matching_probs.view(batch_size * time_steps, -1)
+        #
+        # # Apply the critic layer
+        # flattened_critic_output = self.critic_layer(flattened_matching_probs)
+        #
+        # # Reshape the critic_output back to the required shape
+        # critic_output = flattened_critic_output.view(batch_size, time_steps, 1)
+        #
+        # return matching_probs, critic_output
 
 
 
