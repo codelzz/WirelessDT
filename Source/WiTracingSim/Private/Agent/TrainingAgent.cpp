@@ -135,10 +135,7 @@ void ATrainingAgent::WebSocketOnMessageHandler(const FString& Message)
 //--- WEBSOCKET
 void ATrainingAgent::WiTracingInference()
 {
-	if (TXs.Num() <= 0 || RXs.Num() <= 0)
-	{
-		return;
-	}
+	if (TXs.Num() <= 0 || RXs.Num() <= 0) {return;}
 
 	{
 		TArray<FWiTracingResult> Results;
@@ -202,6 +199,7 @@ void ATrainingAgent::SendInferenceResult(TArray<FWiTracingResult> Results)
 
 void ATrainingAgent::PrepareTrainStep(const FTrainingAgentRecvData& Data)
 {
+	this->ConfigEngine(RecvData);
 	this->SpawnRXs(RecvData);
 	this->SpawnTXs(RecvData);
 
@@ -285,4 +283,21 @@ void ATrainingAgent::DestroyTXs()
 		TX->Destroy();
 	}
 	TXs.Empty();
+}
+
+void ATrainingAgent::ConfigEngine(const FTrainingAgentRecvData& Data)
+{
+	IConsoleVariable* ReflectionCoef = IConsoleManager::Get().FindConsoleVariable(TEXT("r.WiTracing.ReflectionCoeficient"));
+	if (ReflectionCoef)
+	{
+		ReflectionCoef->Set(Data.reflectioncoef, EConsoleVariableFlags::ECVF_SetByCode);
+	}
+
+	IConsoleVariable* PenetrationCoef = IConsoleManager::Get().FindConsoleVariable(TEXT("r.WiTracing.PenetrationCoeficient"));
+	if (PenetrationCoef)
+	{
+		PenetrationCoef->Set(Data.penetrationcoef, EConsoleVariableFlags::ECVF_SetByCode);
+	}
+	
+	GEngine->AddOnScreenDebugMessage(99, 15.0f, FColor::Cyan, FString::Printf(TEXT("[WiTracing] Coefiction | Penetration: %.4f | Reflection: %.4f"), Data.penetrationcoef, Data.reflectioncoef));
 }

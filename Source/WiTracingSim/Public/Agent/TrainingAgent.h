@@ -43,6 +43,12 @@ public:
 	TArray<float> txz;
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
 	TArray<float> txpower;
+
+	// WiTracing Engine
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		float penetrationcoef;
+	UPROPERTY(BlueprintReadWrite, Category = "Training")
+		float reflectioncoef;
 	
 	// Fitting
 	UPROPERTY(BlueprintReadWrite, Category = "Training")
@@ -164,6 +170,8 @@ private:
 	//--WebSocket End
 
 	//--Training
+	void ConfigEngine(const FTrainingAgentRecvData& Data);
+
 	void SpawnRXs(const FTrainingAgentRecvData& Data);
 	void SpawnTXs(const FTrainingAgentRecvData& Data);
 
