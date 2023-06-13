@@ -6,7 +6,7 @@
 #include "WiTracing/Devices/WirelessTX.h"
 #include "WiTracing/Devices/WirelessRX.h"
 #include "WiTracing/WiTracingRendererBlueprintLibrary.h"
-//#include "Networking/UdpClientComponent.h"
+#include "Networking/UdpClientComponent.h"
 //#include "Networking/TcpClientComponent.h"
 //#include "Networking/WebSocketComponent.h"
 
@@ -53,6 +53,10 @@ public:
 	/** The port of target server */
 	UPROPERTY(EditAnywhere, category = "Networking")
 		uint16 Port = 8888;
+
+	/** Udp client for communication */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))
+		TObjectPtr<class UUdpClientComponent> UdpClientComponent;
 
 public:
 	// AWiTracingAgent Blueprint Functions ---
@@ -105,8 +109,15 @@ public:
 	 * Send Result via WebSocket Client
 	 * @param Results - the Array of WiTracing result
 	 */
-	UFUNCTION(BlueprintCallable, Category = "WiTracing")
+	UFUNCTION(BlueprintCallable, Category = "Networking")
 	void WebSocketSend(TArray<FWiTracingResult> Results);
+
+	/**
+	 * Send Result via UDP Client
+	 * @param Result - the WiTracing result
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Networking")
+	void UDPSend(TArray<FWiTracingResult> Results);
 	
 	/**
 	 * get all transmitter in current world
@@ -156,6 +167,12 @@ private:
 
 	/** get render target for caching WiTracing result */
 	UTextureRenderTarget2D* GetRenderTarget(bool bVisualized = false);
+
+	/**
+	 * get udp client
+	 * @return the udp client component
+	 */
+	class UUdpClientComponent* GetUdpClientComponent() const { return UdpClientComponent; }
 
 private:
 	/** transmitters in current world */

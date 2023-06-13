@@ -11,6 +11,10 @@ AWiTracingAgent::AWiTracingAgent()
 {
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
+
+	UdpClientComponent = CreateDefaultSubobject<UUdpClientComponent>(TEXT("UdpServerComponent0"));
+	UdpClientComponent = CastChecked<UUdpClientComponent>(GetUdpClientComponent());
+	UdpClientComponent->SetupAttachment(Root);
 }
 
 void AWiTracingAgent::BeginPlay()
@@ -94,6 +98,20 @@ void AWiTracingAgent::WebSocketSend(TArray<FWiTracingResult> Results)
 	}
 }
 
+void AWiTracingAgent::UDPSend(TArray<FWiTracingResult> Results)
+{
+	if (UdpClientComponent)
+	{
+		for (auto Result : Results) {
+			FString JsonData;
+			if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
+			{
+				UdpClientComponent->Send(JsonData, Host, Port);
+			}
+		}
+	}
+}
+
 UTextureRenderTarget2D* AWiTracingAgent::GetRenderTarget(bool bVisualized) {
 	UTextureRenderTarget2D* RenderTarget = TextureRenderTarget;
 	if (bVisualized) {
@@ -161,7 +179,7 @@ void AWiTracingAgent::InitWebSocket()
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "[SENT] ");
 		});
 
-	WebSocket->Connect();
+	// WebSocket->Connect();
 }
 //--- WEBSOCKET
 
