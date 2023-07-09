@@ -17,3 +17,10 @@ register(
      entry_point="RL.envs:RLfuseEnv",
      max_episode_steps=300,
 )
+
+
+register(
+     id="RL/RLfuse-abla",
+     entry_point="RL.envs:RLfuseAblaEnv",
+     max_episode_steps=300,
+)

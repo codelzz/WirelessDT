@@ -66,6 +66,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "imu")
 		float oriz = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category = "imu")
+		bool isTuring = false;
+	UPROPERTY(BlueprintReadWrite, Category = "imu")
 		int64 timestamp = 0;
 
 };

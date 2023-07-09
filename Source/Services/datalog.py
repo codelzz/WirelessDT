@@ -94,7 +94,7 @@ class CameraDetectionLog:
 
 class IMULog:
     raw_file = settings.IMU_DATALOG_CONFIG['raw_file']
-    csv_fields = ['IMU_ID', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'orientation_x', 'orientation_y', 'orientation_z', 'timestamp']
+    csv_fields = ['IMU_ID', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'orientation_x', 'orientation_y', 'orientation_z', 'is_turing', 'timestamp']
 
     def __init__(self):
         self.data_queue = queue.Queue()
@@ -117,6 +117,7 @@ class IMULog:
                    'orientation_x': data['orix'],
                    'orientation_y': data['oriy'],
                    'orientation_z': data['oriz'],
+                   'is_turing':data['isturing'],
                    'timestamp': data['timestamp']
                    }
         return csv_row

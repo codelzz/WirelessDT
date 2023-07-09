@@ -114,6 +114,9 @@ class RLfuseEnv(gym.Env):
 
         self.imu_df['acceleration_x'] = self.imu_df['acceleration_x'].clip(-2000, 2000)
         self.imu_df['acceleration_y'] = self.imu_df['acceleration_y'].clip(-2000, 2000)
+        self.imu_df['acceleration_z'] = self.imu_df['acceleration_z'].clip(-2000, 2000)
+        self.imu_df['orientation_x'] = self.imu_df['orientation_x'].clip(-500, 500)
+        self.imu_df['orientation_y'] = self.imu_df['orientation_y'].clip(-500, 500)
         self.imu_df['orientation_z'] = self.imu_df['orientation_z'].clip(-500, 500)
         self.imu_df.loc[:, 'acceleration_x'] = (self.imu_df.loc[:, 'acceleration_x'] - self.imu_df.loc[:,
                                                                                        'acceleration_x'].min()) / (
@@ -125,6 +128,21 @@ class RLfuseEnv(gym.Env):
                                                            self.imu_df.loc[:, 'acceleration_y'].max() - self.imu_df.loc[
                                                                                                         :,
                                                                                                         'acceleration_y'].min())
+        self.imu_df.loc[:, 'acceleration_z'] = (self.imu_df.loc[:, 'acceleration_z'] - self.imu_df.loc[:,
+                                                                                       'acceleration_z'].min()) / (
+                                                       self.imu_df.loc[:, 'acceleration_z'].max() - self.imu_df.loc[
+                                                                                                    :,
+                                                                                                    'acceleration_z'].min())
+        self.imu_df.loc[:, 'orientation_x'] = (self.imu_df.loc[:, 'orientation_x'] - self.imu_df.loc[:,
+                                                                                     'orientation_x'].min()) / (
+                                                      self.imu_df.loc[:, 'orientation_x'].max() - self.imu_df.loc[
+                                                                                                  :,
+                                                                                                  'orientation_x'].min())
+        self.imu_df.loc[:, 'orientation_y'] = (self.imu_df.loc[:, 'orientation_y'] - self.imu_df.loc[:,
+                                                                                     'orientation_y'].min()) / (
+                                                      self.imu_df.loc[:, 'orientation_y'].max() - self.imu_df.loc[
+                                                                                                  :,
+                                                                                                  'orientation_y'].min())
         self.imu_df.loc[:, 'orientation_z'] = (self.imu_df.loc[:, 'orientation_z'] - self.imu_df.loc[:,
                                                                                        'orientation_z'].min()) / (
                                                            self.imu_df.loc[:, 'orientation_z'].max() - self.imu_df.loc[
@@ -217,6 +235,9 @@ class RLfuseEnv(gym.Env):
     #     self.label_list = label_list
     #
     #     return vis_list, imu_list, label_list
+
+    def get_obs(self, curr_timestamp_idx):
+        return self._get_obs(curr_timestamp_idx)
 
     def _get_obs(self, curr_timestamp_idx):
         label_list = []
@@ -320,7 +341,7 @@ class RLfuseEnv(gym.Env):
         return wifi_name_lists , wifi_rssi_lists, vis_lists, imu_list, label_list
 
     def reset(self, seed=None, options=None):
-        self.curr_timestamp_idx = random.randint(0, 25000)
+        self.curr_timestamp_idx = random.randint(0, 35000)
         wifi_name_lists , wifi_rssi_lists, vis_list, imu_list, label_list = self._get_obs(self.curr_timestamp_idx)
 
         obs = (wifi_name_lists , wifi_rssi_lists, imu_list, vis_list)
@@ -328,6 +349,11 @@ class RLfuseEnv(gym.Env):
             "label": label_list
         }
         return obs, info
+
+    def get_batch_obs(self, timestamp_idx, time_length):
+        for i in range(timestamp_idx, timestamp_idx + time_length):
+            wifi_name_lists, wifi_rssi_lists, vis_lists, imu_list, label_list = self._get_obs(i)
+
 
     def step(self, action):
         highest_probabilities = np.max(action, axis=-1).squeeze()

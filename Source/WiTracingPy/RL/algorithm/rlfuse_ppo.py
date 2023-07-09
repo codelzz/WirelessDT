@@ -9,6 +9,8 @@ from RL.agent.fusion_model_v6 import FusionModelv6
 from RL.agent.fusion_model_v7 import FusionModelv7
 from RL.agent.fusion_model_v8 import FusionModelv8
 from RL.agent.fusion_model_v9 import FusionModelv9
+from RL.agent.fusion_model_v9_no_wifi import FusionModelv9_No_WIFI
+from RL.agent.fusion_model_v9_no_imu import FusionModelv9_No_IMU
 from torch.distributions import MultivariateNormal
 import torch
 from torch.optim import Adam
@@ -31,8 +33,8 @@ class Rlfuse_ppo:
         # ALG STEP 1
         # Initialize actor and critic networks
 
-        self.actor = FusionModelv9(wifi_feature_size=64, imu_feature_size=64, visual_feature_size=128, num_classes=10).to(self.device)
-        self.critic = FusionModelv9(wifi_feature_size=64, imu_feature_size=64, visual_feature_size=128, num_classes=10).to(self.device)
+        self.actor = FusionModelv3(wifi_feature_size=128, imu_feature_size=64, visual_feature_size=64, num_classes=10).to(self.device)
+        self.critic = FusionModelv3(wifi_feature_size=128, imu_feature_size=64, visual_feature_size=64, num_classes=10).to(self.device)
 
         # self.actor = FusionModelv5(wifi_feature_size=32, imu_feature_size=32, visual_feature_size=64, lstm_hidden_size=64, max_pedestrian_detections=10, num_classes=10).to(self.device)
         # self.critic = FusionModelv5(wifi_feature_size=32, imu_feature_size=32, visual_feature_size=64, lstm_hidden_size=64, max_pedestrian_detections=10, num_classes=10).to(self.device)
@@ -67,7 +69,7 @@ class Rlfuse_ppo:
         self.critic_scheduler = MultiplicativeLR(self.critic_optim, lr_lambda=lmbda2)
 
         self.save_rate = 512
-        self.timestep_length = 50
+        # self.timestep_length = 50
 
         self.training_step = 0
 
