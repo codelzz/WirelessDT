@@ -72,12 +72,12 @@ void ATrainingAgent::InitWebSocketClient()
 
 	WebSocket->OnConnectionError().AddLambda([](const FString& Error)
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, Error);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, Error);
 		});
 
 	WebSocket->OnClosed().AddLambda([](int32 StatusCode, const FString& Reason, bool bWasClean)
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, bWasClean ? FColor::Green : FColor::Red, "Connection closed " + Reason);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, bWasClean ? FColor::Green : FColor::Red, "Connection closed " + Reason);
 		});
 
 
@@ -88,7 +88,7 @@ void ATrainingAgent::InitWebSocketClient()
 
 	WebSocket->OnMessageSent().AddLambda([](const FString& Message)
 		{
-			// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "[SENT] ");
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "[SENT] ");
 		});
 
 	WebSocket->Connect();
