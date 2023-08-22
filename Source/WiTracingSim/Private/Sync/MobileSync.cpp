@@ -21,6 +21,7 @@ void AMobileSync::BeginPlay()
 {
 	Super::BeginPlay();
 	MobileData.BaseLocation = this->GetActorLocation();
+	BeaconReceived = false;
 }
 
 
@@ -35,6 +36,16 @@ void AMobileSync::Tick(float DeltaTime)
 	}
 }
 
+TArray<FString> AMobileSync::GetRXName() 
+{
+	return MobileData.GetRXNames();
+}
+
+TArray<int64> AMobileSync::GetRXRssi()
+{
+	return MobileData.GetRXRssis();
+}
+
 void AMobileSync::OnUdpServerComponentDataRecv(FString RecvData, FString& RespData)
 {
 	// Parse data to struct
@@ -46,10 +57,12 @@ void AMobileSync::OnUdpServerComponentDataRecv(FString RecvData, FString& RespDa
 		if (MobileData.rxname.Num() > 0) {
 			for (int Index = 0; Index < MobileData.rxname.Num(); Index++) {
 				GEngine->AddOnScreenDebugMessage(Index, 15.0f, FColor::Green, FString::Printf(TEXT("Mobile data received! | %s %d"), *MobileData.rxname[Index], MobileData.rxrssi[Index]));
+				BeaconReceived = true;
 			}
 		}
 		else {
 			GEngine->AddOnScreenDebugMessage(0, 15.0f, FColor::Green, FString::Printf(TEXT("Mobile data received! | No Beacon Detected!")));
+			BeaconReceived = false;
 		}
 		bNeedSync = true;
 	} 

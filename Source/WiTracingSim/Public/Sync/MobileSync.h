@@ -43,6 +43,18 @@ public:
 		return FRotator(pitch, yaw, roll);
 	}
 
+	TArray<FString> GetRXNames() 
+	{
+		return rxname;
+	}
+
+	TArray<int64> GetRXRssis()
+	{
+		return rxrssi;
+	}
+
+
+
 	FVector BaseLocation = FVector(0, 0, 0);
 };
 
@@ -68,6 +80,14 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Mobile", meta = (AllowPrivateAccess = "true"))
 		FMobileData MobileData;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Mobile", meta = (AllowPrivateAccess = "true"))
+		bool BeaconReceived;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Mobile")
+		TArray<FString> GetRXName();
+	UFUNCTION(BlueprintCallable, Category = "Mobile")
+		TArray<int64> GetRXRssi();
 
 private:
 	// Is this really necessary?
