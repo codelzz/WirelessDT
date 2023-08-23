@@ -869,3 +869,8 @@ Content/ShoppingMall/Trees
 # Ingore some demo office assets
 Content/Buildings/Buildings/Meshes
 Content/Libs
+
+# Ingore some Openday env assets
+Content/Demo/Map/Openday
+Content/Demo/Map/Openday2
+Content/Openday
