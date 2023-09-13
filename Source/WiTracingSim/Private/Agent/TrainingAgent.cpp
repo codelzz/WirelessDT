@@ -36,23 +36,23 @@ void ATrainingAgent::EndPlay(EEndPlayReason::Type EndPlayReason)
 //--- WEBSOCKET
 void ATrainingAgent::WebSocketSend()
 {
-	//if (!WebSocket->IsConnected())
-	//{
-	//	WebSocket->Connect();
-	//}
+	if (!WebSocket->IsConnected())
+	{
+		WebSocket->Connect();
+	}
 
 	// Send Data
-	//FString Data = "{\"Data\":\"Data From Fitting Agent\"}";
-	///*for (auto Result : Results) {
-	//	FString JsonData;
-	//	if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
-	//	{
-	//		Data += JsonData;
-	//	}
-	//}*/
-	//if (Data != "" && WebSocket->IsConnected()) {
-	//	WebSocket->Send(Data);
-	//}
+	FString Data = "{\"Data\":\"Data From Fitting Agent\"}";
+	/*for (auto Result : Results) {
+		FString JsonData;
+		if (FJsonObjectConverter::UStructToJsonObjectString(Result, JsonData, 0, 0))
+		{
+			Data += JsonData;
+		}
+	}*/
+	if (Data != "" && WebSocket->IsConnected()) {
+		WebSocket->Send(Data);
+	}
 }
 
 void ATrainingAgent::InitWebSocketClient()
@@ -72,12 +72,12 @@ void ATrainingAgent::InitWebSocketClient()
 
 	WebSocket->OnConnectionError().AddLambda([](const FString& Error)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, Error);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "OnConnectionError:" + Error);
 		});
 
 	WebSocket->OnClosed().AddLambda([](int32 StatusCode, const FString& Reason, bool bWasClean)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, bWasClean ? FColor::Green : FColor::Red, "Connection closed " + Reason);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, bWasClean ? FColor::Green : FColor::Red, "Connection closed:" + Reason);
 		});
 
 
@@ -88,7 +88,7 @@ void ATrainingAgent::InitWebSocketClient()
 
 	WebSocket->OnMessageSent().AddLambda([](const FString& Message)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "[SENT] ");
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "[SENT] " + Message.Left(50));
 		});
 
 	WebSocket->Connect();
