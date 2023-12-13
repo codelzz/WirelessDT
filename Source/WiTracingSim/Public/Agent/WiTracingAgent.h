@@ -52,7 +52,7 @@ public:
 
 	/** The port of target server */
 	UPROPERTY(EditAnywhere, category = "Networking")
-		uint16 Port = 8888;
+		uint16 Port = 7777;
 
 	/** Udp client for communication */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Networking", meta = (AllowPrivateAccess = "true"))

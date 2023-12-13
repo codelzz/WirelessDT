@@ -178,8 +178,6 @@ void AWiTracingAgent::InitWebSocket()
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "[SENT] ");
 		});
-
-	// WebSocket->Connect();
 }
 //--- WEBSOCKET
 
